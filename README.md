@@ -10,7 +10,7 @@ This repository holds the recovered working codebase and governance documentatio
 
 - **Specification:** complete. The full design suite, agent registry, and decision record document the platform's target architecture (26 agents, 30 roles, provenance discipline, verification gates).
 - **Code (this tree):** a recovered Stage 3 working state (June–October 2026) implementing **16 specialist agents**, the orchestrator, a FastAPI web dashboard, the project schema and validator, a knowledge base of WA planning/costing data, and a test suite. Recovered from the original local build and committed here as the platform's first version-controlled baseline.
-- **Validation:** pending. Owner-run bring-up gates (test suites, dual-project runs) are the next milestone — this project's discipline is that nothing is claimed done without the owner reading real output.
+- **Validation:** Gate 1 verified 2026-11-16 - full test suite 20/20 green (commit c7fe176). Gates 2 (dual-project web run) and 3 (Blender) are the next milestone - this project's discipline: no claim without real output.
 - **Successor app:** an operator-side command centre ("5Horses Development OS") has also been built on Base44 under the Itinerate Building Co. banner, carrying the same doctrine into a hosted React stack.
 
 ## What's in this repo

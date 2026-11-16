@@ -19,7 +19,7 @@ Engineering milestones for the 5Horses Development Platform. Honest by doctrine:
 | Specification (PRD, TRD, schema, decision record) | Complete — 26 agents / 30 roles designed |
 | Working code (this tree) | Stage 3 recovery — 10 agents operating |
 | Knowledge base | 4 of ~24 knowledge files present |
-| Validation | Pending — owner-run bring-up gates not yet executed |
+| Validation | Gate 1 verified 2026-11-16 - full test suite 20/20 green (commit c7fe176). Gates 2 (dual-project web run) and 3 (Blender bridge) pending - next milestone. |
 | Pilots | Two live WA community projects (data redacted in public copy) |
 
 ## Roadmap — what is needed next, in order
