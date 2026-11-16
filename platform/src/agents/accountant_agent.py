@@ -43,7 +43,7 @@ class AccountantAgent(BaseAgent):
     
     def _analyze_funding_sources(self, funding_sources: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze funding sources and structure"""
-        total_funding = sum(s.get("amount", 0) for s in funding_sources)
+        total_funding = sum(s.get("amount") or 0 for s in funding_sources)
         
         # Categorize funding types
         grants = []
@@ -54,7 +54,7 @@ class AccountantAgent(BaseAgent):
         
         for source in funding_sources:
             name = source.get("source", "").lower()
-            amount = source.get("amount", 0)
+            amount = source.get("amount") or 0
             
             if "grant" in name:
                 grants.append({"source": name, "amount": amount})
@@ -116,7 +116,7 @@ class AccountantAgent(BaseAgent):
         total_cost = 0
         phases = project_data.get("phases", {})
         for phase in ["planning", "infrastructure", "construction", "project_management"]:
-            total_cost += phases.get(phase, {}).get("cost", 0)
+            total_cost += phases.get(phase, {}).get("cost") or 0
         
         contingency = phases.get("contingency_percent", 10)
         total_cost *= (1 + contingency / 100)
@@ -255,7 +255,7 @@ class AccountantAgent(BaseAgent):
                 "funding_breakdown": funding_analysis["funding_percentages"],
                 "source_count": funding_analysis["source_count"],
                 "funding_sources": [
-                    f"{s.get('source', 'Unknown')}: ${s.get('amount', 0):,.2f}" 
+                    f"{s.get('source', 'Unknown')}: ${s.get('amount') or 0:,.2f}" 
                     for s in funding_analysis["funding_sources"]
                 ]
             },

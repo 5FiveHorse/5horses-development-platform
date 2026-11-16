@@ -539,7 +539,7 @@ class CostAgent(BaseAgent):
         water_cost = (water.get("crossovers", 0) or 0) * (water.get("cost_per", 0) or 0)
         power_cost = (power.get("connections", 0) or 0) * (power.get("cost_per", 0) or 0)
         sewer_cost = (sewer.get("units", 0) or 0) * (sewer.get("cost_per", 0) or 0)
-        roads_cost = roads.get("cost", 0) or 0
+        roads_cost = roads.get("cost") or 0 or 0
         total = water_cost + power_cost + sewer_cost + roads_cost
 
         if total <= 0:

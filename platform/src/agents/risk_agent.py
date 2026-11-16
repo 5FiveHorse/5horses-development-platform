@@ -55,13 +55,13 @@ class RiskAgent(BaseAgent):
         
         phases = project_data.get("phases", {})
         for phase in ["planning", "infrastructure", "construction", "project_management"]:
-            total_cost += phases.get(phase, {}).get("cost", 0)
+            total_cost += phases.get(phase, {}).get("cost") or 0
         
         contingency = phases.get("contingency_percent", 10)
         total_cost *= (1 + contingency / 100)
         
         funding_sources = project_data.get("funding", {}).get("sources", [])
-        total_funding = sum(s.get("amount", 0) for s in funding_sources)
+        total_funding = sum(s.get("amount") or 0 for s in funding_sources)
         
         funding_gap = total_cost - total_funding
         

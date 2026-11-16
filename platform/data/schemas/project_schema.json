@@ -1,39 +1,128 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FiveHorses Project Data Schema",
+  "description": "v1.1 (2026-11-16): financial and lease-particular fields accept null to represent values REDACTED under confidentiality policy A7 (real figures held privately; never fabricate zeros). Provenance: reconstructed from Ox Alpha delivery record; nullability amendment adopted during owner-run bring-up gates.",
   "type": "object",
-  "required": ["project", "buildings", "phases"],
+  "required": [
+    "project",
+    "buildings",
+    "phases"
+  ],
   "properties": {
     "project": {
       "type": "object",
-      "required": ["name", "type", "location", "site_area_ha"],
+      "required": [
+        "name",
+        "type",
+        "location",
+        "site_area_ha"
+      ],
       "properties": {
-        "name": {"type": "string", "minLength": 1, "maxLength": 100},
-        "type": {"enum": ["commercial", "social_housing", "community_housing", "traditional"]},
-        "location": {"type": "string", "minLength": 1},
-        "site_area_ha": {"type": "number", "minimum": 0.01, "maximum": 10000},
-        "developable_fraction": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.7},
-        "land_tenure": {"enum": ["freehold", "leasehold", "peppercorn_lease", "state_reserve"], "default": "freehold"},
-        "land_cost": {"type": "number", "minimum": 0, "default": 0},
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "type": {
+          "enum": [
+            "commercial",
+            "social_housing",
+            "community_housing",
+            "traditional"
+          ]
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1
+        },
+        "site_area_ha": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 10000
+        },
+        "developable_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.7
+        },
+        "land_tenure": {
+          "enum": [
+            "freehold",
+            "leasehold",
+            "peppercorn_lease",
+            "state_reserve"
+          ],
+          "default": "freehold"
+        },
+        "land_cost": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "default": 0
+        },
         "lease_terms": {
           "type": "object",
           "properties": {
-            "years_remaining": {"type": "integer", "minimum": 0},
-            "annual_rent": {"type": "number", "minimum": 0},
-            "term_years": {"type": "integer", "minimum": 0}
+            "years_remaining": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "annual_rent": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "term_years": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
           }
         },
-        "site_description": {"type": "string", "maxLength": 500},
+        "site_description": {
+          "type": "string",
+          "maxLength": 800
+        },
         "parcels": {
           "type": "array",
           "description": "Optional: for projects spanning multiple land parcels with different tenure (e.g. a freehold building parcel plus an adjacent leased/Crown reserve). When present, site_area_ha above should be the primary/aggregate figure; parcels give the breakdown.",
           "items": {
             "type": "object",
-            "required": ["name", "area_ha", "tenure"],
+            "required": [
+              "name",
+              "area_ha",
+              "tenure"
+            ],
             "properties": {
-              "name": {"type": "string"},
-              "area_ha": {"type": "number", "minimum": 0},
-              "tenure": {"enum": ["freehold", "leasehold", "peppercorn_lease", "state_reserve", "crown_reserve"]},
-              "notes": {"type": "string"}
+              "name": {
+                "type": "string"
+              },
+              "area_ha": {
+                "type": "number",
+                "minimum": 0
+              },
+              "tenure": {
+                "enum": [
+                  "freehold",
+                  "leasehold",
+                  "peppercorn_lease",
+                  "state_reserve",
+                  "crown_reserve"
+                ]
+              },
+              "notes": {
+                "type": "string"
+              }
             }
           }
         },
@@ -41,10 +130,18 @@
           "type": "object",
           "description": "Optional explicit rezoning status - more precise than inferring from land_tenure alone.",
           "properties": {
-            "required": {"type": "boolean"},
-            "current_zoning": {"type": "string"},
-            "proposed_zoning": {"type": "string"},
-            "notes": {"type": "string"}
+            "required": {
+              "type": "boolean"
+            },
+            "current_zoning": {
+              "type": "string"
+            },
+            "proposed_zoning": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            }
           }
         }
       }
@@ -56,14 +153,37 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["type", "count", "area_sqm"],
+            "required": [
+              "type",
+              "count",
+              "area_sqm"
+            ],
             "properties": {
-              "type": {"type": "string"},
-              "count": {"type": "integer", "minimum": 1},
-              "bedrooms": {"type": "integer", "minimum": 0},
-              "bathrooms": {"type": "number", "minimum": 0},
-              "area_sqm": {"type": "number", "minimum": 20},
-              "construction_type": {"enum": ["standard", "modular"]}
+              "type": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "bedrooms": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bathrooms": {
+                "type": "number",
+                "minimum": 0
+              },
+              "area_sqm": {
+                "type": "number",
+                "minimum": 20
+              },
+              "construction_type": {
+                "enum": [
+                  "standard",
+                  "modular"
+                ]
+              }
             }
           }
         },
@@ -71,12 +191,30 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["rooms", "count", "area_sqm"],
+            "required": [
+              "rooms",
+              "count",
+              "area_sqm"
+            ],
             "properties": {
-              "rooms": {"type": "integer", "minimum": 1},
-              "count": {"type": "integer", "minimum": 1},
-              "construction": {"enum": ["standard", "modular"]},
-              "area_sqm": {"type": "number", "minimum": 20}
+              "rooms": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "construction": {
+                "enum": [
+                  "standard",
+                  "modular"
+                ]
+              },
+              "area_sqm": {
+                "type": "number",
+                "minimum": 20
+              }
             }
           }
         },
@@ -84,11 +222,22 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["name", "area_sqm", "type"],
+            "required": [
+              "name",
+              "area_sqm",
+              "type"
+            ],
             "properties": {
-              "name": {"type": "string"},
-              "area_sqm": {"type": "number", "minimum": 10},
-              "type": {"type": "string"}
+              "name": {
+                "type": "string"
+              },
+              "area_sqm": {
+                "type": "number",
+                "minimum": 10
+              },
+              "type": {
+                "type": "string"
+              }
             }
           }
         }
@@ -100,81 +249,207 @@
         "water": {
           "type": "object",
           "properties": {
-            "existing": {"enum": ["mains", "bore", "none"]},
-            "crossovers": {"type": "integer", "minimum": 0},
-            "cost_per": {"type": "number", "minimum": 0}
+            "existing": {
+              "enum": [
+                "mains",
+                "bore",
+                "none"
+              ]
+            },
+            "crossovers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cost_per": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
           }
         },
         "power": {
           "type": "object",
           "properties": {
-            "existing": {"enum": ["nearby", "onsite", "none"]},
-            "connections": {"type": "integer", "minimum": 0},
-            "cost_per": {"type": "number", "minimum": 0}
+            "existing": {
+              "enum": [
+                "nearby",
+                "onsite",
+                "none"
+              ]
+            },
+            "connections": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cost_per": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
           }
         },
         "sewer": {
           "type": "object",
           "properties": {
-            "type": {"enum": ["mains", "septic", "none"]},
-            "units": {"type": "integer", "minimum": 0},
-            "cost_per": {"type": "number", "minimum": 0}
+            "type": {
+              "enum": [
+                "mains",
+                "septic",
+                "none"
+              ]
+            },
+            "units": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cost_per": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
           }
         },
         "roads": {
           "type": "object",
           "properties": {
-            "existing": {"enum": ["sealed", "dirt", "none"]},
-            "upgrade_needed": {"type": "boolean"},
-            "cost": {"type": "number", "minimum": 0}
+            "existing": {
+              "enum": [
+                "sealed",
+                "dirt",
+                "none"
+              ]
+            },
+            "upgrade_needed": {
+              "type": "boolean"
+            },
+            "cost": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
           }
         }
       }
     },
     "funding": {
       "type": "object",
-      "required": ["model", "sources"],
+      "required": [
+        "model",
+        "sources"
+      ],
       "properties": {
-        "model": {"enum": ["commercial", "nfp_grants", "government", "mixed"]},
+        "model": {
+          "enum": [
+            "commercial",
+            "nfp_grants",
+            "government",
+            "mixed"
+          ]
+        },
         "sources": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["source", "amount"],
+            "required": [
+              "source",
+              "amount"
+            ],
             "properties": {
-              "source": {"type": "string"},
-              "amount": {"type": "number", "minimum": 0}
+              "source": {
+                "type": "string"
+              },
+              "amount": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              }
             }
           }
         },
-        "target": {"type": "number", "minimum": 0},
-        "named_program": {"type": "string", "description": "e.g. 'rPPP Stream One' - the specific grant program, distinct from the generic funding model."},
+        "target": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "named_program": {
+          "type": "string",
+          "description": "e.g. 'rPPP Stream One' - the specific grant program, distinct from the generic funding model."
+        },
         "in_kind_sources": {
           "type": "array",
           "description": "Non-cash contributions (e.g. utility provider infrastructure support) - tracked separately from cash funding.sources.",
           "items": {
             "type": "object",
-            "required": ["provider", "estimated_value"],
+            "required": [
+              "provider",
+              "estimated_value"
+            ],
             "properties": {
-              "provider": {"type": "string"},
-              "description": {"type": "string"},
-              "estimated_value": {"type": "number", "minimum": 0},
-              "status": {"enum": ["identified", "in_discussion", "committed", "confirmed"]}
+              "provider": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "estimated_value": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "status": {
+                "enum": [
+                  "identified",
+                  "in_discussion",
+                  "committed",
+                  "confirmed"
+                ]
+              }
             }
           }
         },
         "ongoing_revenue_streams": {
           "type": "array",
-          "description": "Non-grant, non-sale ongoing operational revenue (e.g. carbon credits, seed sales, café income) - distinct from one-off funding.sources.",
+          "description": "Non-grant, non-sale ongoing operational revenue (e.g. carbon credits, seed sales, cafÃ© income) - distinct from one-off funding.sources.",
           "items": {
             "type": "object",
-            "required": ["name", "type"],
+            "required": [
+              "name",
+              "type"
+            ],
             "properties": {
-              "name": {"type": "string"},
-              "type": {"type": "string"},
-              "estimated_annual_value": {"type": "number", "minimum": 0},
-              "start_year": {"type": "integer"},
-              "notes": {"type": "string"}
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "estimated_annual_value": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "start_year": {
+                "type": "integer"
+              },
+              "notes": {
+                "type": "string"
+              }
             }
           }
         }
@@ -186,45 +461,104 @@
         "planning": {
           "type": "object",
           "properties": {
-            "cost": {"type": "number", "minimum": 0},
-            "duration_months": {"type": "integer", "minimum": 0},
-            "description": {"type": "string"}
+            "cost": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "duration_months": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": {
+              "type": "string"
+            }
           }
         },
         "infrastructure": {
           "type": "object",
           "properties": {
-            "cost": {"type": "number", "minimum": 0},
-            "duration_months": {"type": "integer", "minimum": 0},
-            "description": {"type": "string"}
+            "cost": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "duration_months": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": {
+              "type": "string"
+            }
           }
         },
         "construction": {
           "type": "object",
           "properties": {
-            "cost": {"type": "number", "minimum": 0},
-            "duration_months": {"type": "integer", "minimum": 0},
-            "description": {"type": "string"}
+            "cost": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "duration_months": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": {
+              "type": "string"
+            }
           }
         },
         "project_management": {
           "type": "object",
           "properties": {
-            "cost": {"type": "number", "minimum": 0},
-            "duration_months": {"type": "integer", "minimum": 0},
-            "description": {"type": "string"}
+            "cost": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "duration_months": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": {
+              "type": "string"
+            }
           }
         },
-        "contingency_percent": {"type": "number", "minimum": 0, "maximum": 30, "default": 10}
+        "contingency_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "default": 10
+        }
       }
     },
     "metadata": {
       "type": "object",
       "properties": {
-        "created": {"type": "string", "format": "date-time"},
-        "updated": {"type": "string", "format": "date-time"},
-        "version": {"type": "string"},
-        "author": {"type": "string"}
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
       }
     }
   }

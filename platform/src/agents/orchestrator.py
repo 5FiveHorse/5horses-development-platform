@@ -428,8 +428,8 @@ class AgentOrchestrator:
         
         # Financial metrics
         print(f"\n💰 Financial Metrics:")
-        print(f"  Total Cost: ${summary.get('total_cost', 0):,.2f}")
-        print(f"  Funding Gap: ${summary.get('funding_gap', 0):,.2f}")
+        print(f"  Total Cost: ${summary.get('total_cost') or 0:,.2f}")
+        print(f"  Funding Gap: ${summary.get('funding_gap') or 0:,.2f}")
         print(f"  Feasible: {'✅ Yes' if summary.get('is_feasible', False) else '❌ No'}")
         
         # Planning metrics
@@ -455,8 +455,8 @@ class AgentOrchestrator:
         # Valuation metrics
         if 'total_completed_value' in summary:
             print(f"\n💎 Valuation:")
-            print(f"  Completed Value: ${summary.get('total_completed_value', 0):,.2f}")
-            print(f"  Gross Profit: ${summary.get('gross_profit', 0):,.2f}")
+            print(f"  Completed Value: ${summary.get('total_completed_value') or 0:,.2f}")
+            print(f"  Gross Profit: ${summary.get('gross_profit') or 0:,.2f}")
         
         # Business case metrics
         if 'blended_bcr' in summary:
