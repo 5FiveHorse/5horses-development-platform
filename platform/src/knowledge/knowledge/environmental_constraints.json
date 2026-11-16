@@ -1,0 +1,127 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-08-17",
+  "source": "WA Environmental Protection Authority; WA Department of Biodiversity, Conservation and Attractions; DFES Bushfire Prone Mapping",
+  "locations": {
+    "gnowangerup": {
+      "vegetation": ["Remnant vegetation", "Agricultural land"],
+      "watercourses": ["Intermittent streams"],
+      "heritage": ["Aboriginal heritage site - Former Mission"],
+      "bushfire_risk": "Moderate",
+      "bal_rating": "BAL-12.5",
+      "bal_description": "Moderate risk - ember attack protection required",
+      "heritage_consultant_required": true,
+      "section_18_likely": true,
+      "environmental_significance": "High",
+      "notes": "Former mission site with known Aboriginal heritage significance. Intermittent watercourses require buffer zones."
+    },
+    "mount_barker": {
+      "vegetation": ["Pasture land", "Remnant trees"],
+      "watercourses": ["Nearby creek"],
+      "heritage": ["Potential Aboriginal heritage"],
+      "bushfire_risk": "High",
+      "bal_rating": "BAL-29",
+      "bal_description": "High risk - active fire protection required",
+      "heritage_consultant_required": true,
+      "section_18_likely": false,
+      "environmental_significance": "High",
+      "notes": "Bushfire-prone area. Potential Aboriginal heritage requires desktop assessment. Creek proximity triggers hydrology study."
+    },
+    "perth_metro": {
+      "vegetation": ["Urban vegetation"],
+      "watercourses": ["None identified"],
+      "heritage": ["None identified"],
+      "bushfire_risk": "Low",
+      "bal_rating": "BAL-Low",
+      "bal_description": "Low risk - standard construction",
+      "heritage_consultant_required": false,
+      "section_18_likely": false,
+      "environmental_significance": "Low",
+      "notes": "Urban environment with established infrastructure. Standard environmental controls apply."
+    },
+    "great_southern": {
+      "vegetation": ["Mixed remnant vegetation", "Agricultural land"],
+      "watercourses": ["Seasonal watercourses"],
+      "heritage": ["Potential Aboriginal heritage - requires survey"],
+      "bushfire_risk": "Moderate",
+      "bal_rating": "BAL-12.5",
+      "bal_description": "Moderate risk - ember attack protection required",
+      "heritage_consultant_required": true,
+      "section_18_likely": false,
+      "environmental_significance": "Medium",
+      "notes": "Regional area with mixed environmental values. Seasonal watercourses require buffer management."
+    }
+  },
+  "defaults": {
+    "vegetation": ["Unknown - site survey required"],
+    "watercourses": ["Unknown - hydrology assessment recommended"],
+    "heritage": ["Unknown - desktop heritage assessment recommended"],
+    "bushfire_risk": "Unknown",
+    "bal_rating": "BAL-Low",
+    "bal_description": "Default to low risk pending site assessment",
+    "heritage_consultant_required": true,
+    "section_18_likely": false,
+    "environmental_significance": "Medium",
+    "notes": "Location not found in knowledge base. Default to conservative assessments and recommend site-specific surveys."
+  },
+  "bal_scale": {
+    "BAL-Low": { "severity": 0, "construction_standard": "Standard" },
+    "BAL-12.5": { "severity": 1, "construction_standard": "Ember protection" },
+    "BAL-19": {
+      "severity": 2,
+      "construction_standard": "Enhanced ember protection"
+    },
+    "BAL-29": {
+      "severity": 3,
+      "construction_standard": "Active fire protection"
+    },
+    "BAL-40": {
+      "severity": 4,
+      "construction_standard": "Special construction required"
+    },
+    "BAL-FZ": {
+      "severity": 5,
+      "construction_standard": "Flame zone - extreme measures"
+    }
+  },
+  "mitigation_rules": {
+    "vegetation": {
+      "trigger": "any",
+      "measures": [
+        "Vegetation management plan required",
+        "Retain significant trees and habitat corridors if remnant vegetation present"
+      ]
+    },
+    "watercourses": {
+      "trigger": "any_non_none",
+      "measures": [
+        "Buffer zones around watercourses",
+        "Sediment control during construction"
+      ]
+    },
+    "heritage": {
+      "trigger": "any_non_none",
+      "measures": [
+        "Heritage impact assessment required",
+        "Engage with Aboriginal Heritage Group",
+        "Section 18 consent application if Aboriginal heritage confirmed"
+      ]
+    },
+    "bushfire": {
+      "trigger": "bal_not_low",
+      "measures": [
+        "Ember attack protection for buildings",
+        "Defensible space around structures",
+        "Access for emergency vehicles",
+        "Bushfire management plan"
+      ]
+    },
+    "bushfire_extreme": {
+      "trigger": "bal_severity_gte_4",
+      "measures": [
+        "Special construction materials required",
+        "Independent bushfire consultant engagement mandatory"
+      ]
+    }
+  }
+}

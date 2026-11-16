@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FiveHorses Platform</title>
+<style>
+  :root {
+    --ink: #1f2421;
+    --paper: #f7f5f0;
+    --line: #d8d3c6;
+    --accent: #9c6b2e;
+    --accent-soft: #f0e6d4;
+    --ok: #3a6b4a;
+    --warn: #a1442a;
+    --muted: #6b6a63;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Georgia", "Iowan Old Style", serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  header h1 {
+    font-size: 1.3rem;
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+  header .sub {
+    font-family: "Courier New", monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  .panel {
+    border: 1px solid var(--line);
+    background: white;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .panel h2 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 1rem 0;
+    font-family: "Courier New", monospace;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0.5rem;
+  }
+  select, button {
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--ink);
+    background: white;
+    color: var(--ink);
+  }
+  button {
+    background: var(--ink);
+    color: white;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent); }
+  button:disabled { background: var(--line); color: var(--muted); cursor: wait; }
+  label.checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-right: 1.2rem;
+    font-size: 0.9rem;
+  }
+  .row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+  .status-badge {
+    font-family: "Courier New", monospace;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+  .status-success { background: var(--ok); color: white; }
+  .status-partial { background: var(--accent); color: white; }
+  .status-failed { background: var(--warn); color: white; }
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .metric {
+    border-left: 3px solid var(--accent);
+    padding-left: 0.7rem;
+  }
+  .metric .value { font-size: 1.4rem; font-weight: bold; }
+  .metric .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .scope-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  .scope-compare .scope { border: 1px solid var(--line); padding: 1rem; }
+  .scope h3 { margin: 0 0 0.6rem 0; font-size: 0.95rem; }
+  .risks { margin-top: 0.6rem; }
+  .risks li { color: var(--warn); font-size: 0.85rem; margin-bottom: 0.3rem; }
+  details { margin-top: 1rem; }
+  summary { cursor: pointer; font-family: "Courier New", monospace; font-size: 0.8rem; color: var(--muted); }
+  pre {
+    background: #fbfaf7;
+    border: 1px solid var(--line);
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.8rem;
+    max-height: 500px;
+  }
+  .empty { color: var(--muted); font-style: italic; }
+  table.budget { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+  table.budget th, table.budget td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); }
+  table.budget th { font-family: "Courier New", monospace; font-size: 0.75rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.04em; }
+  table.budget td.amount, table.budget th.amount { text-align: right; font-variant-numeric: tabular-nums; }
+  table.budget tr.total-row td { border-top: 2px solid var(--ink); border-bottom: none; font-weight: bold; }
+  .code-badge { font-family: "Courier New", monospace; background: var(--accent-soft); color: var(--accent); padding: 0.1rem 0.4rem; border-radius: 2px; font-size: 0.8rem; }
+  .status-tag { font-size: 0.75rem; color: var(--muted); font-family: "Courier New", monospace; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FiveHorses Platform</h1>
+  <span class="sub">local instance</span>
+</header>
+
+<main>
+
+  <div class="panel">
+    <h2>Run a project</h2>
+    <div class="row">
+      <select id="project-select"><option>Loading projects...</option></select>
+      <button id="run-btn" onclick="runProject()">Run</button>
+    </div>
+    <div class="row">
+      <label class="checkbox"><input type="checkbox" id="agent-planning" checked> Planning</label>
+      <label class="checkbox"><input type="checkbox" id="agent-cost" checked> Cost</label>
+      <label class="checkbox"><input type="checkbox" id="agent-architect" checked> Architect</label>
+      <label class="checkbox"><input type="checkbox" id="opt-3d"> Enable 3D rendering (needs Blender running)</label>
+    </div>
+    <div class="row">
+      <button onclick="exportProjectArchitect()" style="background: white; color: var(--ink);">Export for Project Architect (JSON)</button>
+      <button onclick="viewBudget()" style="background: white; color: var(--ink);">View Itemized Budget</button>
+    </div>
+    <p id="status-line" class="empty">No run yet.</p>
+  </div>
+
+  <div id="results"></div>
+
+</main>
+
+<script>
+const API = "";
+
+async function loadProjects() {
+  const res = await fetch(API + "/api/projects");
+  const data = await res.json();
+  const sel = document.getElementById("project-select");
+  sel.innerHTML = "";
+  if (!data.projects || data.projects.length === 0) {
+    sel.innerHTML = "<option>No projects found in data/projects/</option>";
+    return;
+  }
+  data.projects.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.path.split(/[\\/]/).filter(Boolean).pop();
+    opt.textContent = `${p.name} (${p.type}, ${p.location})`;
+    sel.appendChild(opt);
+  });
+}
+
+function selectedAgents() {
+  const agents = [];
+  if (document.getElementById("agent-planning").checked) agents.push("planning");
+  if (document.getElementById("agent-cost").checked) agents.push("cost");
+  if (document.getElementById("agent-architect").checked) agents.push("architect");
+  return agents;
+}
+
+const COST_CODE_GROUPS = {
+  "A": "Project Administration", "B": "Land & Title", "C": "Survey & Geospatial",
+  "D": "Planning & Approvals", "E": "Design & Documentation", "F": "Environmental",
+  "G": "Cultural & Heritage", "H": "Community & Stakeholder Engagement", "I": "Finance & Feasibility",
+  "J": "Infrastructure & Utilities", "K": "Construction", "L": "Asset Management",
+  "M": "Contingency & Risk Buffers", "N": "Commercial Buildings", "O": "Residential Buildings",
+  "P": "Industrial & Warehouse", "Q": "Company Administration", "R": "Arts, Theatre & Cultural Facilities",
+};
+
+async function viewBudget() {
+  const project = document.getElementById("project-select").value;
+  const statusLine = document.getElementById("status-line");
+  statusLine.textContent = `Loading itemized budget for ${project}...`;
+  try {
+    const res = await fetch(`${API}/api/projects/${project}/export/project-architect`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    renderBudgetTable(data);
+    statusLine.textContent = `Budget loaded for ${project}.`;
+  } catch (err) {
+    statusLine.textContent = "Budget load failed: " + err;
+  }
+}
+
+function renderBudgetTable(data) {
+  const items = data.BudgetItem || [];
+  const results = document.getElementById("results");
+
+  let existing = document.getElementById("budget-panel");
+  if (existing) existing.remove();
+
+  const panel = document.createElement("div");
+  panel.className = "panel";
+  panel.id = "budget-panel";
+
+  if (items.length === 0) {
+    panel.innerHTML = `<h2>Itemized Budget</h2><p class="empty">No budget items available - run the Cost agent first.</p>`;
+    results.prepend(panel);
+    return;
+  }
+
+  const total = items.reduce((sum, i) => sum + (i.budgeted_amount || 0), 0);
+  const rows = items.map(i => `
+    <tr>
+      <td>${i.description}</td>
+      <td>${i.cost_code ? `<span class="code-badge">${i.cost_code}</span> ${COST_CODE_GROUPS[i.cost_code] || ""}` : `<span class="status-tag">unassigned</span>`}</td>
+      <td class="amount">$${Number(i.budgeted_amount || 0).toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+      <td><span class="status-tag">${i.status}</span></td>
+    </tr>
+  `).join("");
+
+  panel.innerHTML = `
+    <h2>Itemized Budget (${data.Project ? data.Project.name : ""})</h2>
+    <table class="budget">
+      <thead><tr><th>Description</th><th>Cost Code</th><th class="amount">Budgeted</th><th>Status</th></tr></thead>
+      <tbody>
+        ${rows}
+        <tr class="total-row"><td colspan="2">Total</td><td class="amount">$${Number(total).toLocaleString(undefined, {maximumFractionDigits: 0})}</td><td></td></tr>
+      </tbody>
+    </table>
+  `;
+  results.prepend(panel);
+}
+
+async function exportProjectArchitect() {
+  const project = document.getElementById("project-select").value;
+  const statusLine = document.getElementById("status-line");
+  statusLine.textContent = `Exporting ${project} for Project Architect...`;
+  try {
+    const res = await fetch(`${API}/api/projects/${project}/export/project-architect`);
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project}_project_architect_export.json`;
+    a.click();
+    statusLine.textContent = `Exported ${project} - ${Object.keys(data).length} entity types.`;
+  } catch (err) {
+    statusLine.textContent = "Export failed: " + err;
+  }
+}
+
+async function runProject() {  const project = document.getElementById("project-select").value;
+  const btn = document.getElementById("run-btn");
+  const statusLine = document.getElementById("status-line");
+  btn.disabled = true;
+  btn.textContent = "Running...";
+  statusLine.textContent = `Running ${selectedAgents().join(", ")} against ${project}...`;
+  statusLine.className = "";
+
+  try {
+    const res = await fetch(API + "/api/run", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        project_name: project,
+        agent_names: selectedAgents(),
+        enable_3d_rendering: document.getElementById("opt-3d").checked,
+      })
+    });
+    const report = await res.json();
+    renderReport(report);
+  } catch (err) {
+    statusLine.textContent = "Request failed: " + err;
+    statusLine.className = "";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Run";
+  }
+}
+
+function renderReport(report) {
+  const statusLine = document.getElementById("status-line");
+  const badgeClass = "status-" + (report.status || "failed");
+  statusLine.innerHTML = `Status: <span class="status-badge ${badgeClass}">${report.status}</span>` +
+    (report.error ? ` &mdash; ${report.error}` : "");
+
+  const results = document.getElementById("results");
+  results.innerHTML = "";
+
+  if (report.error) return;
+
+  const s = report.summary || {};
+  const metricsPanel = document.createElement("div");
+  metricsPanel.className = "panel";
+  metricsPanel.innerHTML = `
+    <h2>Summary</h2>
+    <div class="metric-grid">
+      ${s.total_cost_calculated !== undefined && s.total_cost_calculated !== null ? `<div class="metric"><div class="value">$${Number(s.total_cost_calculated).toLocaleString(undefined, {maximumFractionDigits:0})}</div><div class="label">Total cost (funded phase)</div></div>` : ""}
+      ${s.total_tenancies !== undefined && s.total_tenancies !== null ? `<div class="metric"><div class="value">${s.total_tenancies}</div><div class="label">Total tenancies (funded phase)</div></div>` : ""}
+      ${s.subdivision_potential_yield !== undefined && s.subdivision_potential_yield !== null ? `<div class="metric"><div class="value">${s.subdivision_potential_yield}</div><div class="label">Full subdivision potential (lots)</div></div>` : ""}
+      ${s.feasibility_viable !== undefined && s.feasibility_viable !== null ? `<div class="metric"><div class="value">${s.feasibility_viable ? "Viable" : "Not viable"}</div><div class="label">${s.funding_coverage_percent !== undefined ? "Feasibility (funding coverage)" : "Feasibility (market-sale model)"}</div></div>` : ""}
+      ${s.funding_coverage_percent !== undefined && s.funding_coverage_percent !== null ? `<div class="metric"><div class="value">${s.funding_coverage_percent}%</div><div class="label">Funding secured / total cost</div></div>` : ""}
+      ${s.funding_gap !== undefined && s.funding_gap !== null && s.funding_gap > 0 ? `<div class="metric"><div class="value">$${Number(s.funding_gap).toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="label">Funding gap remaining</div></div>` : ""}
+      ${s.approval_pathway ? `<div class="metric"><div class="value" style="font-size:1rem">${s.approval_pathway}</div><div class="label">Approval pathway</div></div>` : ""}
+      ${s.design_style ? `<div class="metric"><div class="value" style="font-size:1rem">${s.design_style}</div><div class="label">Design style</div></div>` : ""}
+    </div>
+    ${s.flags && s.flags.length ? `<ul class="risks">${s.flags.map(f => `<li>${f}</li>`).join("")}</ul>` : ""}
+  `;
+  results.appendChild(metricsPanel);
+
+  // Cost scope comparison, when the cost agent ran
+  const costResult = report.results && report.results.cost;
+  if (costResult && costResult.results) {
+    const fp = costResult.results.funded_phase;
+    const sp = costResult.results.full_subdivision_potential;
+    if (fp && sp) {
+      const scopePanel = document.createElement("div");
+      scopePanel.className = "panel";
+      scopePanel.innerHTML = `
+        <h2>Cost: two scopes</h2>
+        <div class="scope-compare">
+          <div class="scope">
+            <h3>Funded phase (build now)</h3>
+            <div class="metric"><div class="value">$${Number(fp.cost_breakdown.total_cost).toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="label">Total cost</div></div>
+            <div class="metric"><div class="value">${fp.total_tenancies}</div><div class="label">Total tenancies</div></div>
+            <div class="metric"><div class="value">${fp.cost_per_tenancy ? "$" + Number(fp.cost_per_tenancy).toLocaleString() : "n/a"}</div><div class="label">Cost per tenancy</div></div>
+            ${fp.feasibility.risks.length ? `<ul class="risks">${fp.feasibility.risks.map(r=>`<li>${r}</li>`).join("")}</ul>` : ""}
+          </div>
+          <div class="scope">
+            <h3>Full subdivision potential (land-banking)</h3>
+            <div class="metric"><div class="value">${sp.potential_yield}</div><div class="label">Potential lots (R${sp.assumed_density_dwellings_per_ha})</div></div>
+            <div class="metric"><div class="value">$${Number(sp.cost_breakdown.total_cost).toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="label">Subdivision cost estimate</div></div>
+            <div class="metric"><div class="value">${sp.feasibility.profit_margin_percent}%</div><div class="label">Margin (assumption-heavy)</div></div>
+          </div>
+        </div>
+      `;
+      results.appendChild(scopePanel);
+    }
+  }
+
+  const rawPanel = document.createElement("div");
+  rawPanel.className = "panel";
+  rawPanel.innerHTML = `<details><summary>Full raw report (JSON)</summary><pre>${JSON.stringify(report, null, 2)}</pre></details>`;
+  results.appendChild(rawPanel);
+}
+
+loadProjects();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["project", "buildings", "phases"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": ["name", "type", "location", "site_area_ha"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 100},
+        "type": {"enum": ["commercial", "social_housing", "community_housing", "traditional"]},
+        "location": {"type": "string", "minLength": 1},
+        "site_area_ha": {"type": "number", "minimum": 0.01, "maximum": 10000},
+        "developable_fraction": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.7},
+        "land_tenure": {"enum": ["freehold", "leasehold", "peppercorn_lease", "state_reserve"], "default": "freehold"},
+        "land_cost": {"type": "number", "minimum": 0, "default": 0},
+        "lease_terms": {
+          "type": "object",
+          "properties": {
+            "years_remaining": {"type": "integer", "minimum": 0},
+            "annual_rent": {"type": "number", "minimum": 0},
+            "term_years": {"type": "integer", "minimum": 0}
+          }
+        },
+        "site_description": {"type": "string", "maxLength": 500},
+        "parcels": {
+          "type": "array",
+          "description": "Optional: for projects spanning multiple land parcels with different tenure (e.g. a freehold building parcel plus an adjacent leased/Crown reserve). When present, site_area_ha above should be the primary/aggregate figure; parcels give the breakdown.",
+          "items": {
+            "type": "object",
+            "required": ["name", "area_ha", "tenure"],
+            "properties": {
+              "name": {"type": "string"},
+              "area_ha": {"type": "number", "minimum": 0},
+              "tenure": {"enum": ["freehold", "leasehold", "peppercorn_lease", "state_reserve", "crown_reserve"]},
+              "notes": {"type": "string"}
+            }
+          }
+        },
+        "rezoning": {
+          "type": "object",
+          "description": "Optional explicit rezoning status - more precise than inferring from land_tenure alone.",
+          "properties": {
+            "required": {"type": "boolean"},
+            "current_zoning": {"type": "string"},
+            "proposed_zoning": {"type": "string"},
+            "notes": {"type": "string"}
+          }
+        }
+      }
+    },
+    "buildings": {
+      "type": "object",
+      "properties": {
+        "homes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "count", "area_sqm"],
+            "properties": {
+              "type": {"type": "string"},
+              "count": {"type": "integer", "minimum": 1},
+              "bedrooms": {"type": "integer", "minimum": 0},
+              "bathrooms": {"type": "number", "minimum": 0},
+              "area_sqm": {"type": "number", "minimum": 20},
+              "construction_type": {"enum": ["standard", "modular"]}
+            }
+          }
+        },
+        "dorms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rooms", "count", "area_sqm"],
+            "properties": {
+              "rooms": {"type": "integer", "minimum": 1},
+              "count": {"type": "integer", "minimum": 1},
+              "construction": {"enum": ["standard", "modular"]},
+              "area_sqm": {"type": "number", "minimum": 20}
+            }
+          }
+        },
+        "commercial": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "area_sqm", "type"],
+            "properties": {
+              "name": {"type": "string"},
+              "area_sqm": {"type": "number", "minimum": 10},
+              "type": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "infrastructure": {
+      "type": "object",
+      "properties": {
+        "water": {
+          "type": "object",
+          "properties": {
+            "existing": {"enum": ["mains", "bore", "none"]},
+            "crossovers": {"type": "integer", "minimum": 0},
+            "cost_per": {"type": "number", "minimum": 0}
+          }
+        },
+        "power": {
+          "type": "object",
+          "properties": {
+            "existing": {"enum": ["nearby", "onsite", "none"]},
+            "connections": {"type": "integer", "minimum": 0},
+            "cost_per": {"type": "number", "minimum": 0}
+          }
+        },
+        "sewer": {
+          "type": "object",
+          "properties": {
+            "type": {"enum": ["mains", "septic", "none"]},
+            "units": {"type": "integer", "minimum": 0},
+            "cost_per": {"type": "number", "minimum": 0}
+          }
+        },
+        "roads": {
+          "type": "object",
+          "properties": {
+            "existing": {"enum": ["sealed", "dirt", "none"]},
+            "upgrade_needed": {"type": "boolean"},
+            "cost": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "funding": {
+      "type": "object",
+      "required": ["model", "sources"],
+      "properties": {
+        "model": {"enum": ["commercial", "nfp_grants", "government", "mixed"]},
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source", "amount"],
+            "properties": {
+              "source": {"type": "string"},
+              "amount": {"type": "number", "minimum": 0}
+            }
+          }
+        },
+        "target": {"type": "number", "minimum": 0},
+        "named_program": {"type": "string", "description": "e.g. 'rPPP Stream One' - the specific grant program, distinct from the generic funding model."},
+        "in_kind_sources": {
+          "type": "array",
+          "description": "Non-cash contributions (e.g. utility provider infrastructure support) - tracked separately from cash funding.sources.",
+          "items": {
+            "type": "object",
+            "required": ["provider", "estimated_value"],
+            "properties": {
+              "provider": {"type": "string"},
+              "description": {"type": "string"},
+              "estimated_value": {"type": "number", "minimum": 0},
+              "status": {"enum": ["identified", "in_discussion", "committed", "confirmed"]}
+            }
+          }
+        },
+        "ongoing_revenue_streams": {
+          "type": "array",
+          "description": "Non-grant, non-sale ongoing operational revenue (e.g. carbon credits, seed sales, café income) - distinct from one-off funding.sources.",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": {"type": "string"},
+              "type": {"type": "string"},
+              "estimated_annual_value": {"type": "number", "minimum": 0},
+              "start_year": {"type": "integer"},
+              "notes": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "phases": {
+      "type": "object",
+      "properties": {
+        "planning": {
+          "type": "object",
+          "properties": {
+            "cost": {"type": "number", "minimum": 0},
+            "duration_months": {"type": "integer", "minimum": 0},
+            "description": {"type": "string"}
+          }
+        },
+        "infrastructure": {
+          "type": "object",
+          "properties": {
+            "cost": {"type": "number", "minimum": 0},
+            "duration_months": {"type": "integer", "minimum": 0},
+            "description": {"type": "string"}
+          }
+        },
+        "construction": {
+          "type": "object",
+          "properties": {
+            "cost": {"type": "number", "minimum": 0},
+            "duration_months": {"type": "integer", "minimum": 0},
+            "description": {"type": "string"}
+          }
+        },
+        "project_management": {
+          "type": "object",
+          "properties": {
+            "cost": {"type": "number", "minimum": 0},
+            "duration_months": {"type": "integer", "minimum": 0},
+            "description": {"type": "string"}
+          }
+        },
+        "contingency_percent": {"type": "number", "minimum": 0, "maximum": 30, "default": 10}
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "created": {"type": "string", "format": "date-time"},
+        "updated": {"type": "string", "format": "date-time"},
+        "version": {"type": "string"},
+        "author": {"type": "string"}
+      }
+    }
+  }
+}

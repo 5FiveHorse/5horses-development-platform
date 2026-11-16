@@ -1,0 +1,143 @@
+{% extends "base.html" %} {% block content %}
+<div class="flex">
+  <h2>📋 Projects</h2>
+  <div class="flex gap-2">
+    <a href="/project/new" class="btn btn-success">+ New Project</a>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Upload Project JSON</h2>
+  <div class="upload-area" id="uploadArea">
+    <p>📁 Drop your project_data.json here or click to upload</p>
+    <input type="file" id="fileInput" accept=".json" style="display: none" />
+    <button
+      class="btn btn-primary mt-2"
+      onclick="document.getElementById('fileInput').click()"
+    >
+      Choose File
+    </button>
+    <div id="uploadStatus" class="mt-2"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Your Projects</h2>
+  {% if projects %} {% for project in projects %}
+  <div class="project-list-item">
+    <div class="flex">
+      <div>
+        <div class="name">{{ project.name }}</div>
+        <div class="details">
+          Type: {{ project.type }} | Location: {{ project.location }} {% if
+          project.last_updated != 'unknown' %} | Updated: {{
+          project.last_updated }} {% endif %}
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <a href="/project/{{ project.name }}" class="btn btn-primary"
+          >View Dashboard</a
+        >
+        <button
+          class="btn btn-danger"
+          onclick="deleteProject('{{ project.name }}')"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endfor %} {% else %}
+  <p class="text-muted">No projects yet. Create your first project!</p>
+  <a href="/project/new" class="btn btn-success mt-2">Create New Project</a>
+  {% endif %}
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  // File upload handling
+  const uploadArea = document.getElementById("uploadArea");
+  const fileInput = document.getElementById("fileInput");
+  const uploadStatus = document.getElementById("uploadStatus");
+
+  uploadArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = "#1a2a6c";
+  });
+
+  uploadArea.addEventListener("dragleave", () => {
+    uploadArea.style.borderColor = "#ddd";
+  });
+
+  uploadArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = "#ddd";
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileUpload(files[0]);
+    }
+  });
+
+  fileInput.addEventListener("change", (e) => {
+    if (e.target.files.length > 0) {
+      handleFileUpload(e.target.files[0]);
+    }
+  });
+
+  function handleFileUpload(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    uploadStatus.innerHTML = "Uploading...";
+
+    fetch("/api/project/upload", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          uploadStatus.innerHTML = `
+                    <div class="alert alert-success">
+                        ✅ Project '${data.project_name}' uploaded successfully!
+                        <a href="/project/${data.project_name}" class="btn btn-primary btn-sm mt-2">View Project</a>
+                    </div>
+                `;
+          setTimeout(() => location.reload(), 3000);
+        } else {
+          uploadStatus.innerHTML = `
+                    <div class="alert alert-danger">
+                        ❌ Error: ${data.message || "Upload failed"}
+                        ${data.errors ? "<pre>" + JSON.stringify(data.errors, null, 2) + "</pre>" : ""}
+                    </div>
+                `;
+        }
+      })
+      .catch((error) => {
+        uploadStatus.innerHTML = `
+                <div class="alert alert-danger">
+                    ❌ Error: ${error.message}
+                </div>
+            `;
+      });
+  }
+
+  function deleteProject(projectName) {
+    if (!confirm(`Are you sure you want to delete "${projectName}"?`)) return;
+
+    fetch(`/api/project/${projectName}`, {
+      method: "DELETE",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          location.reload();
+        } else {
+          alert("Error deleting project: " + data.message);
+        }
+      })
+      .catch((error) => {
+        alert("Error: " + error.message);
+      });
+  }
+</script>
+{% endblock %}

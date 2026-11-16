@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "source": "Project Architect PRD (Base44) - Rawlinsons / AS 1181 pattern",
+  "note": "Only the group-letter taxonomy (A-R) was documented in the source PRD - the underlying 200+ individual numeric codes (e.g. 'N.120') were not provided, so this file defines GROUPS only. Individual code assignment within a group still needs the actual Rawlinsons code list.",
+  "groups": {
+    "A": "Project Administration",
+    "B": "Land & Title",
+    "C": "Survey & Geospatial",
+    "D": "Planning & Approvals",
+    "E": "Design & Documentation",
+    "F": "Environmental",
+    "G": "Cultural & Heritage",
+    "H": "Community & Stakeholder Engagement",
+    "I": "Finance & Feasibility",
+    "J": "Infrastructure & Utilities",
+    "K": "Construction",
+    "L": "Asset Management",
+    "M": "Contingency & Risk Buffers",
+    "N": "Commercial Buildings",
+    "O": "Residential Buildings",
+    "P": "Industrial & Warehouse",
+    "Q": "Company Administration",
+    "R": "Arts, Theatre & Cultural Facilities"
+  }
+}

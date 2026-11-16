@@ -1,0 +1,40 @@
+{
+  "templates": {
+    "community_housing": {
+      "project": {
+        "type": "community_housing",
+        "site_area_ha": 1.0,
+        "developable_fraction": 0.7,
+        "land_tenure": "peppercorn_lease"
+      },
+      "phases": {
+        "planning": { "cost": 80000, "duration_months": 6 },
+        "infrastructure": { "cost": 500000, "duration_months": 3 },
+        "construction": { "cost": 1500000, "duration_months": 12 },
+        "project_management": { "cost": 100000, "duration_months": 18 },
+        "contingency_percent": 10
+      },
+      "funding": {
+        "model": "nfp_grants"
+      }
+    },
+    "commercial": {
+      "project": {
+        "type": "commercial",
+        "site_area_ha": 0.5,
+        "developable_fraction": 0.8,
+        "land_tenure": "freehold"
+      },
+      "phases": {
+        "planning": { "cost": 150000, "duration_months": 8 },
+        "infrastructure": { "cost": 300000, "duration_months": 4 },
+        "construction": { "cost": 3000000, "duration_months": 18 },
+        "project_management": { "cost": 150000, "duration_months": 24 },
+        "contingency_percent": 12
+      },
+      "funding": {
+        "model": "commercial"
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "version": "2.0",
+  "last_updated": "2026-07-28",
+  "source": "UDIA State of the Land 2026, Master Builders WA",
+  "regions": {
+    "perth_metro": {
+      "land_rate_per_sqm": 1006,
+      "construction_rate_per_sqm": 1100,
+      "sale_price": 650000,
+      "markup_percent": 0
+    },
+    "great_southern": {
+      "land_rate_per_sqm": 350,
+      "construction_rate_per_sqm": 1200,
+      "sale_price": 420000,
+      "markup_percent": 10
+    },
+    "gnowangerup": {
+      "land_rate_per_sqm": 250,
+      "construction_rate_per_sqm": 1200,
+      "sale_price": 380000,
+      "markup_percent": 15
+    }
+  }
+}

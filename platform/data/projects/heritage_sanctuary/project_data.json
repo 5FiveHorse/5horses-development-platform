@@ -1,0 +1,52 @@
+{
+  "project": {
+    "name": "Heritage Sanctuary Precinct",
+    "type": "commercial",
+    "location": "mount_barker",
+    "site_area_ha": 40.8498,
+    "land_tenure": "leasehold",
+    "land_cost": 0,
+    "lease_terms": {"annual_rent": null, "term_years": null},
+    "site_description": "Community-led precinct proposed by an Aboriginal community corporation. Built-form area (education/training, workshops, offices, gallery, cafe) on a freehold former golf clubhouse parcel; heritage sanctuary space on the abutting Crown reserve. Constraints: asbestos in the existing clubhouse, BAL-29 bushfire zone, heritage-sensitive areas, possible soil contamination. Full brief — including corporation, lease and lot particulars — is PRIVATE AND CONFIDENTIAL and is available under administrative authorisation only.",
+    "parcels": [
+      {"name": "Freehold clubhouse parcel", "area_ha": 0.8498, "tenure": "freehold", "notes": "8,498 sqm former golf clubhouse - training facilities, cafe, theatre, offices, gallery."},
+      {"name": "Adjacent Crown reserve", "area_ha": 40, "tenure": "crown_reserve", "notes": "Former golf course, zoned recreation and public access. Native seed nursery, cultural garden, carbon farming, walking trails."}
+    ],
+    "rezoning": {
+      "required": true,
+      "current_zoning": "Recreation",
+      "proposed_zoning": "Commercial / Special Use",
+      "notes": "Rezoning of the 40ha reserve required for commercial/education use; separate WAPC and local government application."
+    }
+  },
+  "buildings": {
+    "commercial": [
+      {"name": "Aboriginal Art Gallery", "area_sqm": 200, "type": "gallery"},
+      {"name": "Community Office Hub", "area_sqm": 600, "type": "office"},
+      {"name": "Vocational Training School", "area_sqm": 400, "type": "education"},
+      {"name": "Cafe / Tourism Hub", "area_sqm": 150, "type": "retail"}
+    ]
+  },
+  "funding": {
+    "model": "nfp_grants",
+    "named_program": "Regional Precincts and Partnerships Program (rPPP) - Stream One",
+    "sources": [
+      {"source": "Grants", "amount": null},
+      {"source": "Government Contribution", "amount": null}
+    ],
+    "in_kind_sources": [
+      {"provider": "Water Corporation", "description": "Water/sewer connection support", "estimated_value": null, "status": "identified"},
+      {"provider": "Western Power", "description": "Grid connection support", "estimated_value": null, "status": "identified"}
+    ],
+    "ongoing_revenue_streams": [
+      {"name": "Carbon farming (ACCU credits)", "type": "carbon_credits", "estimated_annual_value": null, "notes": "40ha carbon-farm targeting ACCU credits - value not yet estimated, pending baseline carbon stock assessment."},
+      {"name": "Native seed nursery sales", "type": "product_sales", "estimated_annual_value": null, "notes": "Supplies carbon nursery stock and local horticulture markets - value not yet estimated."}
+    ]
+  },
+  "phases": {
+    "planning": {"cost": null},
+    "construction": {"cost": null},
+    "project_management": {"cost": null},
+    "contingency_percent": 12
+  }
+}

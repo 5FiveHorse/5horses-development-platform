@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-07-28",
+  "source": "WAPC R-Codes 2024",
+  "codes": {
+    "R2.5": {"density": 2.5, "min_lot_size_sqm": 4000, "max_dwellings": 1, "min_frontage": 20, "description": "Very low density rural residential"},
+    "R5": {"density": 5, "min_lot_size_sqm": 2000, "max_dwellings": 1, "min_frontage": 20, "description": "Low density rural residential"},
+    "R10": {"density": 10, "min_lot_size_sqm": 1000, "max_dwellings": 1, "min_frontage": 18, "description": "Low density residential"},
+    "R12.5": {"density": 12.5, "min_lot_size_sqm": 800, "max_dwellings": 1, "min_frontage": 16, "description": "Low density residential"},
+    "R15": {"density": 15, "min_lot_size_sqm": 660, "max_dwellings": 1, "min_frontage": 14, "description": "Low density residential"},
+    "R17.5": {"density": 17.5, "min_lot_size_sqm": 560, "max_dwellings": 1, "min_frontage": 12, "description": "Low-medium density residential"},
+    "R20": {"density": 20, "min_lot_size_sqm": 450, "max_dwellings": 1, "min_frontage": 12, "description": "Rural residential / low-medium density"},
+    "R25": {"density": 25, "min_lot_size_sqm": 350, "max_dwellings": 1, "min_frontage": 10, "description": "Medium-low density residential"},
+    "R30": {"density": 30, "min_lot_size_sqm": 300, "max_dwellings": 1, "min_frontage": 10, "description": "Low density residential"},
+    "R35": {"density": 35, "min_lot_size_sqm": 260, "max_dwellings": 1, "min_frontage": 9, "description": "Medium-low density residential"},
+    "R40": {"density": 40, "min_lot_size_sqm": 220, "max_dwellings": 1, "min_frontage": 8, "description": "Medium-low density residential"},
+    "R50": {"density": 50, "min_lot_size_sqm": 180, "max_dwellings": 1, "min_frontage": 7, "description": "Medium density residential"},
+    "R60": {"density": 60, "min_lot_size_sqm": 150, "max_dwellings": 2, "min_frontage": 7, "description": "Medium density residential"},
+    "R80": {"density": 80, "min_lot_size_sqm": 110, "max_dwellings": 2, "min_frontage": 6, "description": "Medium-high density residential"},
+    "R100": {"density": 100, "min_lot_size_sqm": 90, "max_dwellings": 3, "min_frontage": 6, "description": "High density residential"}
+  },
+  "defaults": {
+    "developable_fraction": 0.7,
+    "roads_deduction_percent": 15
+  }
+}

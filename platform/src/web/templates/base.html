@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FiveHorses Property Development Platform</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          sans-serif;
+        background: #f5f7fa;
+        color: #333;
+        line-height: 1.6;
+      }
+      .header {
+        background: linear-gradient(135deg, #1a2a6c, #2d4373);
+        color: white;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+      .header h1 span {
+        color: #ffd700;
+      }
+      .nav a {
+        color: white;
+        text-decoration: none;
+        margin-left: 2rem;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        transition: background 0.3s;
+      }
+      .nav a:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      .card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+      }
+      .card h2 {
+        margin-bottom: 1rem;
+        color: #1a2a6c;
+      }
+      .btn {
+        display: inline-block;
+        background: #1a2a6c;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: background 0.3s;
+      }
+      .btn:hover {
+        background: #2d4373;
+      }
+      .btn-success {
+        background: #28a745;
+      }
+      .btn-success:hover {
+        background: #218838;
+      }
+      .btn-danger {
+        background: #dc3545;
+      }
+      .btn-danger:hover {
+        background: #c82333;
+      }
+      .btn-primary {
+        background: #007bff;
+      }
+      .btn-primary:hover {
+        background: #0056b3;
+      }
+      .btn-secondary {
+        background: #6c757d;
+      }
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+      }
+      .metric-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #1a2a6c;
+      }
+      .metric-card .label {
+        font-size: 0.85rem;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .metric-card .value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-top: 0.25rem;
+      }
+      .metric-card .value.positive {
+        color: #28a745;
+      }
+      .metric-card .value.negative {
+        color: #dc3545;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+      }
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .alert {
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+      }
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .alert-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .badge-danger {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .badge-warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .gap-1 {
+        gap: 0.5rem;
+      }
+      .gap-2 {
+        gap: 1rem;
+      }
+      .mt-1 {
+        margin-top: 0.5rem;
+      }
+      .mt-2 {
+        margin-top: 1rem;
+      }
+      .mt-3 {
+        margin-top: 1.5rem;
+      }
+      .mb-1 {
+        margin-bottom: 0.5rem;
+      }
+      .mb-2 {
+        margin-bottom: 1rem;
+      }
+      .mb-3 {
+        margin-bottom: 1.5rem;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .text-muted {
+        color: #666;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table th,
+      .table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .table th {
+        background: #f8f9fa;
+        font-weight: 600;
+      }
+      .table tr:hover {
+        background: #f8f9fa;
+      }
+      .project-list-item {
+        padding: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        transition: background 0.3s;
+      }
+      .project-list-item:hover {
+        background: #f8f9fa;
+      }
+      .project-list-item .name {
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+      .project-list-item .details {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 0.25rem;
+      }
+      .upload-area {
+        border: 2px dashed #ddd;
+        padding: 2rem;
+        text-align: center;
+        border-radius: 8px;
+        transition: border-color 0.3s;
+      }
+      .upload-area:hover {
+        border-color: #1a2a6c;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-content">
+        <h1>🏇 Five<span>Horses</span></h1>
+        <nav class="nav">
+          <a href="/">Projects</a>
+          <a href="/project/new">New Project</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container">{% block content %}{% endblock %}</div>
+
+    <script>
+      // Global helper functions
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("en-AU", {
+          style: "currency",
+          currency: "AUD",
+        }).format(amount);
+      }
+
+      function formatNumber(num) {
+        return new Intl.NumberFormat("en-AU").format(num);
+      }
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,366 @@
+{% extends "base.html" %} {% block content %}
+<div class="flex">
+  <h2>📝 New Project</h2>
+  <a href="/" class="btn btn-secondary">← Back to Projects</a>
+</div>
+
+<div class="card">
+  <form method="POST" action="/project/save" id="projectForm">
+    <h3>Project Details</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="project_name">Project Name *</label>
+        <input
+          type="text"
+          id="project_name"
+          name="project_name"
+          required
+          placeholder="e.g., Gnowangerup Housing"
+        />
+      </div>
+      <div class="form-group">
+        <label for="project_type">Project Type *</label>
+        <select id="project_type" name="project_type" required>
+          <option value="community_housing">Community Housing</option>
+          <option value="social_housing">Social Housing</option>
+          <option value="commercial">Commercial</option>
+          <option value="traditional">Traditional</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="location">Location *</label>
+        <input
+          type="text"
+          id="location"
+          name="location"
+          required
+          placeholder="e.g., gnowangerup"
+        />
+      </div>
+      <div class="form-group">
+        <label for="site_area_ha">Site Area (hectares) *</label>
+        <input
+          type="number"
+          id="site_area_ha"
+          name="site_area_ha"
+          required
+          step="0.01"
+          min="0.01"
+          placeholder="17.18"
+        />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="land_tenure">Land Tenure</label>
+        <select id="land_tenure" name="land_tenure">
+          <option value="freehold">Freehold</option>
+          <option value="leasehold">Leasehold</option>
+          <option value="peppercorn_lease" selected>Peppercorn Lease</option>
+          <option value="state_reserve">State Reserve</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="land_cost">Land Cost ($)</label>
+        <input
+          type="number"
+          id="land_cost"
+          name="land_cost"
+          step="1"
+          min="0"
+          value="0"
+        />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Site Description</label>
+      <textarea
+        id="description"
+        name="description"
+        rows="3"
+        placeholder="Describe the site location, features, and context..."
+      ></textarea>
+    </div>
+
+    <hr class="mt-3 mb-3" />
+
+    <h3>Dwellings</h3>
+    <div id="dwellings-container">
+      <div class="form-row dwelling-row">
+        <div class="form-group">
+          <label>Type</label>
+          <input
+            type="text"
+            class="dwelling-type"
+            placeholder="e.g., 3x2"
+            value="3x2"
+          />
+        </div>
+        <div class="form-group">
+          <label>Count</label>
+          <input type="number" class="dwelling-count" min="1" value="2" />
+        </div>
+        <div class="form-group">
+          <label>Bedrooms</label>
+          <input type="number" class="dwelling-bedrooms" min="0" value="3" />
+        </div>
+        <div class="form-group">
+          <label>Bathrooms</label>
+          <input
+            type="number"
+            class="dwelling-bathrooms"
+            min="0"
+            step="0.5"
+            value="2"
+          />
+        </div>
+        <div class="form-group">
+          <label>Area (sqm)</label>
+          <input type="number" class="dwelling-area" min="20" value="140" />
+        </div>
+        <div class="form-group" style="display: flex; align-items: flex-end">
+          <button
+            type="button"
+            class="btn btn-danger remove-dwelling"
+            style="padding: 0.5rem"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-secondary" onclick="addDwelling()">
+      + Add Dwelling
+    </button>
+
+    <hr class="mt-3 mb-3" />
+
+    <h3>Costs</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="planning_cost">Planning Cost ($)</label>
+        <input
+          type="number"
+          id="planning_cost"
+          name="planning_cost"
+          step="1"
+          min="0"
+          value="800000"
+        />
+      </div>
+      <div class="form-group">
+        <label for="infrastructure_cost">Infrastructure Cost ($)</label>
+        <input
+          type="number"
+          id="infrastructure_cost"
+          name="infrastructure_cost"
+          step="1"
+          min="0"
+          value="1500000"
+        />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="construction_cost">Construction Cost ($)</label>
+        <input
+          type="number"
+          id="construction_cost"
+          name="construction_cost"
+          step="1"
+          min="0"
+          value="4000000"
+        />
+      </div>
+      <div class="form-group">
+        <label for="management_cost">Project Management Cost ($)</label>
+        <input
+          type="number"
+          id="management_cost"
+          name="management_cost"
+          step="1"
+          min="0"
+          value="120000"
+        />
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="contingency_percent">Contingency (%)</label>
+      <input
+        type="number"
+        id="contingency_percent"
+        name="contingency_percent"
+        step="0.5"
+        min="0"
+        max="30"
+        value="10"
+      />
+    </div>
+
+    <hr class="mt-3 mb-3" />
+
+    <h3>Funding Sources</h3>
+    <div id="funding-container">
+      <div class="form-row funding-row">
+        <div class="form-group">
+          <label>Source</label>
+          <input
+            type="text"
+            class="funding-source"
+            placeholder="e.g., Government Grant"
+            value="Government Grant"
+          />
+        </div>
+        <div class="form-group">
+          <label>Amount ($)</label>
+          <input
+            type="number"
+            class="funding-amount"
+            min="0"
+            step="1"
+            value="2500000"
+          />
+        </div>
+        <div class="form-group" style="display: flex; align-items: flex-end">
+          <button
+            type="button"
+            class="btn btn-danger remove-funding"
+            style="padding: 0.5rem"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-secondary" onclick="addFunding()">
+      + Add Funding Source
+    </button>
+
+    <div class="mt-3">
+      <button type="submit" class="btn btn-success">Save Project</button>
+      <a href="/" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  // Dwelling management
+  function addDwelling() {
+    const container = document.getElementById("dwellings-container");
+    const row = document.createElement("div");
+    row.className = "form-row dwelling-row";
+    row.innerHTML = `
+            <div class="form-group">
+                <label>Type</label>
+                <input type="text" class="dwelling-type" placeholder="e.g., 3x2">
+            </div>
+            <div class="form-group">
+                <label>Count</label>
+                <input type="number" class="dwelling-count" min="1" value="1">
+            </div>
+            <div class="form-group">
+                <label>Bedrooms</label>
+                <input type="number" class="dwelling-bedrooms" min="0" value="2">
+            </div>
+            <div class="form-group">
+                <label>Bathrooms</label>
+                <input type="number" class="dwelling-bathrooms" min="0" step="0.5" value="1">
+            </div>
+            <div class="form-group">
+                <label>Area (sqm)</label>
+                <input type="number" class="dwelling-area" min="20" value="90">
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+                <button type="button" class="btn btn-danger remove-dwelling" style="padding: 0.5rem;">×</button>
+            </div>
+        `;
+    container.appendChild(row);
+    updateRemoveButtons();
+  }
+
+  function updateRemoveButtons() {
+    document.querySelectorAll(".remove-dwelling").forEach((btn) => {
+      btn.onclick = function () {
+        const row = this.closest(".dwelling-row");
+        if (document.querySelectorAll(".dwelling-row").length > 1) {
+          row.remove();
+        }
+      };
+    });
+  }
+  updateRemoveButtons();
+
+  // Funding management
+  function addFunding() {
+    const container = document.getElementById("funding-container");
+    const row = document.createElement("div");
+    row.className = "form-row funding-row";
+    row.innerHTML = `
+            <div class="form-group">
+                <label>Source</label>
+                <input type="text" class="funding-source" placeholder="e.g., Philanthropic">
+            </div>
+            <div class="form-group">
+                <label>Amount ($)</label>
+                <input type="number" class="funding-amount" min="0" step="1" value="1000000">
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+                <button type="button" class="btn btn-danger remove-funding" style="padding: 0.5rem;">×</button>
+            </div>
+        `;
+    container.appendChild(row);
+    updateFundingButtons();
+  }
+
+  function updateFundingButtons() {
+    document.querySelectorAll(".remove-funding").forEach((btn) => {
+      btn.onclick = function () {
+        const row = this.closest(".funding-row");
+        if (document.querySelectorAll(".funding-row").length > 1) {
+          row.remove();
+        }
+      };
+    });
+  }
+  updateFundingButtons();
+
+  // Form submission
+  document
+    .getElementById("projectForm")
+    .addEventListener("submit", function (e) {
+      // Gather dwellings
+      const dwellings = [];
+      document.querySelectorAll(".dwelling-row").forEach((row) => {
+        dwellings.push({
+          type: row.querySelector(".dwelling-type").value || "unknown",
+          count: parseInt(row.querySelector(".dwelling-count").value) || 1,
+          bedrooms:
+            parseInt(row.querySelector(".dwelling-bedrooms").value) || 0,
+          bathrooms:
+            parseFloat(row.querySelector(".dwelling-bathrooms").value) || 0,
+          area_sqm: parseFloat(row.querySelector(".dwelling-area").value) || 50,
+          construction_type: "standard",
+        });
+      });
+      document.getElementById("dwelling_data").value =
+        JSON.stringify(dwellings);
+
+      // Gather funding
+      const funding = [];
+      document.querySelectorAll(".funding-row").forEach((row) => {
+        const source = row.querySelector(".funding-source").value;
+        const amount = parseFloat(row.querySelector(".funding-amount").value);
+        if (source && amount > 0) {
+          funding.push({ source, amount });
+        }
+      });
+      document.getElementById("funding_sources").value =
+        JSON.stringify(funding);
+    });
+</script>
+{% endblock %}

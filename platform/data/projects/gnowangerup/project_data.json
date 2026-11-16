@@ -1,0 +1,97 @@
+{
+  "project": {
+    "name": "Gnowangerup Community Housing",
+    "type": "community_housing",
+    "location": "gnowangerup",
+    "site_area_ha": 17.18,
+    "developable_fraction": 0.333,
+    "land_tenure": "peppercorn_lease",
+    "land_cost": 0,
+    "lease_terms": { "years_remaining": null, "annual_rent": null },
+    "site_description": "Former Aboriginal Mission site held on a peppercorn lease by an Aboriginal community corporation, in the Great Southern region of Western Australia. Full site brief — including lot, landholding and lease particulars — is PRIVATE AND CONFIDENTIAL and is available under administrative authorisation only."
+  },
+  "buildings": {
+    "homes": [
+      {
+        "type": "Social Home A (3bed/2bath)",
+        "count": 3,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "area_sqm": 140,
+        "construction_type": "standard",
+        "cost_per_unit": null
+      },
+      {
+        "type": "Social Home B (2bed/1bath)",
+        "count": 5,
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "area_sqm": 90,
+        "construction_type": "standard",
+        "cost_per_unit": null
+      },
+      {
+        "type": "Social Home C (1bed/1bath)",
+        "count": 2,
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "area_sqm": 70,
+        "construction_type": "standard",
+        "cost_per_unit": null
+      }
+    ],
+    "dorms": [
+      {
+        "rooms": 6,
+        "count": 2,
+        "construction": "modular",
+        "area_sqm": 180,
+        "cost_per_unit": null
+      }
+    ],
+    "commercial": [
+      {
+        "name": "Shared Amenities Building 1",
+        "area_sqm": 90,
+        "type": "community",
+        "cost_per_unit": null
+      },
+      {
+        "name": "Shared Amenities Building 2",
+        "area_sqm": 90,
+        "type": "community",
+        "cost_per_unit": null
+      }
+    ]
+  },
+  "infrastructure": {
+    "water": { "existing": "mains", "crossovers": 14, "cost_per": null },
+    "power": { "existing": "nearby", "connections": 14, "cost_per": null },
+    "sewer": { "type": "septic", "units": 14, "cost_per": null },
+    "roads": { "existing": "dirt", "upgrade_needed": true, "cost": null }
+  },
+  "funding": {
+    "model": "nfp_grants",
+    "sources": [
+      { "source": "Government Grant", "amount": null },
+      { "source": "Philanthropic", "amount": null }
+    ],
+    "target": null
+  },
+  "phases": {
+    "planning": {
+      "cost": null,
+      "description": "Master Plan, DA, surveys, approvals"
+    },
+    "infrastructure": {
+      "cost": null,
+      "description": "Water, power, septic, roads (mid-range scenario)"
+    },
+    "construction": {
+      "cost": null,
+      "description": "10 homes + 2 modular dorms + 2 shared amenities buildings (22 tenancies)"
+    },
+    "project_management": { "cost": null, "description": "Across all phases" },
+    "contingency_percent": 10
+  }
+}
