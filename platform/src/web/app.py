@@ -704,7 +704,7 @@ async def view_project(request: Request, project_name: str):
             is_feasible = False
             feasibility_alert = "alert-danger"
             feasibility_label = "\u274c Not Feasible"
-            feasibility_note = f"Funding shortfall of {{money(funding_gap)}}. Consider reducing scope or finding additional funding."
+            feasibility_note = f"Funding shortfall of ${funding_gap:,.2f}. Consider reducing scope or finding additional funding."
         
         # Get agent status
         agent_status = orchestrator.get_agent_status()
