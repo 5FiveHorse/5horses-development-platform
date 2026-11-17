@@ -346,13 +346,13 @@ class AgentOrchestrator:
                     completed = results_data.get("completed_valuation", {})
                     summary["total_completed_value"] = completed.get("total_completed_value", 0)
                     summary["value_per_sqm"] = completed.get("value_per_sqm", 0)
-                    summary["gross_profit"] = results_data.get("profitability", {}).get("gross_profit", 0)
+                    summary["gross_profit"] = results_data.get("profitability", {}).get("gross_profit")
                 
                 # Business analyst agent metrics
                 elif agent_name == "business_analyst":
-                    summary["financial_bcr"] = results_data.get("financial_analysis", {}).get("bcr", 0)
-                    summary["social_bcr"] = results_data.get("social_analysis", {}).get("social_bcr", 0)
-                    summary["blended_bcr"] = results_data.get("blended_analysis", {}).get("blended_bcr", 0)
+                    summary["financial_bcr"] = results_data.get("financial_analysis", {}).get("bcr")
+                    summary["social_bcr"] = results_data.get("social_analysis", {}).get("social_bcr")
+                    summary["blended_bcr"] = results_data.get("blended_analysis", {}).get("blended_bcr")
                     summary["recommendation"] = results_data.get("blended_analysis", {}).get("recommendation", "Unknown")
                     summary["priority"] = results_data.get("blended_analysis", {}).get("priority", "Unknown")
                 
@@ -411,6 +411,16 @@ class AgentOrchestrator:
         """Get current timestamp as string"""
         from datetime import datetime
         return datetime.now().isoformat()
+
+    @staticmethod
+    def _fmt_money(value: Optional[float]) -> str:
+        """Render money, or an em-dash when the figure is withheld (policy A7)."""
+        return f"${value:,.2f}" if isinstance(value, (int, float)) else "—"
+
+    @staticmethod
+    def _fmt_bcr(value: Optional[float]) -> str:
+        """Render a benefit-cost ratio, or an em-dash when it is Undetermined."""
+        return f"{value:.2f}" if isinstance(value, (int, float)) else "—"
     
     def print_summary(self):
         """Print a formatted summary to console"""
@@ -429,9 +439,13 @@ class AgentOrchestrator:
         
         # Financial metrics
         print(f"\n💰 Financial Metrics:")
-        print(f"  Total Cost: ${summary.get('total_cost') or 0:,.2f}")
-        print(f"  Funding Gap: ${summary.get('funding_gap') or 0:,.2f}")
-        print(f"  Feasible: {'✅ Yes' if summary.get('is_feasible', False) else '❌ No'}")
+        print(f"  Total Cost: {self._fmt_money(summary.get('total_cost'))}")
+        print(f"  Funding Gap: {self._fmt_money(summary.get('funding_gap'))}")
+        if 'is_feasible' in summary and summary['is_feasible'] is None:
+            feasible_label = "Undetermined"
+        else:
+            feasible_label = '✅ Yes' if summary.get('is_feasible', False) else '❌ No'
+        print(f"  Feasible: {feasible_label}")
         
         # Planning metrics
         if 'zoning' in summary:
@@ -456,15 +470,15 @@ class AgentOrchestrator:
         # Valuation metrics
         if 'total_completed_value' in summary:
             print(f"\n💎 Valuation:")
-            print(f"  Completed Value: ${summary.get('total_completed_value') or 0:,.2f}")
-            print(f"  Gross Profit: ${summary.get('gross_profit') or 0:,.2f}")
+            print(f"  Completed Value: {self._fmt_money(summary.get('total_completed_value'))}")
+            print(f"  Gross Profit: {self._fmt_money(summary.get('gross_profit'))}")
         
         # Business case metrics
         if 'blended_bcr' in summary:
             print(f"\n📈 Business Case:")
-            print(f"  Financial BCR: {summary.get('financial_bcr', 0):.2f}")
-            print(f"  Social BCR: {summary.get('social_bcr', 0):.2f}")
-            print(f"  Blended BCR: {summary.get('blended_bcr', 0):.2f}")
+            print(f"  Financial BCR: {self._fmt_bcr(summary.get('financial_bcr'))}")
+            print(f"  Social BCR: {self._fmt_bcr(summary.get('social_bcr'))}")
+            print(f"  Blended BCR: {self._fmt_bcr(summary.get('blended_bcr'))}")
             print(f"  Recommendation: {summary.get('recommendation', 'Unknown')}")
         
         # Sustainability metrics
