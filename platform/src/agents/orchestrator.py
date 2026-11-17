@@ -301,9 +301,10 @@ class AgentOrchestrator:
                 # Cost agent metrics
                 if agent_name == "cost":
                     costs = results_data.get("cost_breakdown", {})
-                    summary["total_cost"] = costs.get("total_cost", 0)
-                    summary["funding_gap"] = results_data.get("funding_analysis", {}).get("funding_gap", 0)
-                    summary["is_feasible"] = results_data.get("funding_analysis", {}).get("funding_gap", 0) <= 0
+                    gap = results_data.get("funding_analysis", {}).get("funding_gap")
+                    summary["total_cost"] = costs.get("total_cost")
+                    summary["funding_gap"] = gap
+                    summary["is_feasible"] = None if gap is None else gap <= 0
                 
                 # Planning agent metrics
                 elif agent_name == "planning":
