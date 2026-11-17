@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from .schema_validator import ProjectSchemaValidator
+from .name_resolver import resolve_name, slugify
 
 
 class ProjectLoader:
@@ -55,6 +56,7 @@ class ProjectLoader:
         Returns:
             Project data dictionary
         """
+        project_name = resolve_name(project_name, self.projects_root)
         project_path = self.projects_root / project_name / "project_data.json"
 
         if not project_path.exists():
@@ -158,6 +160,7 @@ class ProjectLoader:
                             "type": data.get("project", {}).get("type", "unknown"),
                             "location": data.get("project", {}).get("location", "unknown"),
                             "last_updated": data.get("metadata", {}).get("updated", "unknown"),
+                            "slug": project_dir.name,
                             "path": project_dir.name
                         })
                     except Exception:
@@ -167,6 +170,7 @@ class ProjectLoader:
                             "type": "invalid",
                             "location": "unknown",
                             "last_updated": "unknown",
+                            "slug": project_dir.name,
                             "path": project_dir.name
                         })
 
@@ -182,6 +186,7 @@ class ProjectLoader:
         Returns:
             True if deleted successfully
         """
+        project_name = resolve_name(project_name, self.projects_root)
         project_dir = self.projects_root / project_name
         if project_dir.exists():
             shutil.rmtree(project_dir)

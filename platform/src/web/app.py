@@ -16,6 +16,22 @@ from src.core.schema_validator import ProjectSchemaValidator
 from src.agents import AgentOrchestrator
 
 # Initialize FastAPI
+def money(v):
+    """Doctrine A7: redacted (None) renders as em-dash, never a fabricated 0."""
+    return f"${v:,.2f}" if isinstance(v, (int, float)) else "\u2014"
+def qty(v):
+    """Integer-with-commas, or em-dash when withheld."""
+    return f"{v:,.0f}" if isinstance(v, (int, float)) else "\u2014"
+def pct_share(part, total):
+    """Percentage of total; em-dash when either side is withheld or total<=0."""
+    if not isinstance(part, (int, float)):
+        return "\u2014"
+    if not isinstance(total, (int, float)) or total <= 0:
+        return "\u2014"
+    return f"{part / total * 100:.1f}"
+def dash(v, fallback="\u2014"):
+    """Pass through any value; withheld (None) becomes the fallback."""
+    return fallback if v is None else v
 app = FastAPI(title="FiveHorses Property Development Platform")
 
 # Setup paths
@@ -170,6 +186,8 @@ def get_base_html(title, content, scripts=""):
         .table th, .table td {{ padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6; }}
         .table th {{ background: #f8f9fa; font-weight: 600; }}
         .table tr:hover {{ background: #f8f9fa; }}
+        /* Wide tables scroll inside their card instead of widening the page */
+        .table-wrap {{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
         .project-list-item {{
             padding: 1rem;
             border: 1px solid #dee2e6;
@@ -669,13 +687,34 @@ async def view_project(request: Request, project_name: str):
         urban = urban_result.get("results", {}).get("yield_analysis", {})
         density = urban_result.get("results", {}).get("density_analysis", {})
         
-        total_cost = costs.get("total_cost", 0)
-        total_funding = funding.get("total_funding_available", 0)
-        funding_gap = funding.get("funding_gap", 0)
-        is_feasible = funding_gap <= 0
+        total_cost = costs.get("total_cost")
+        total_funding = funding.get("total_funding_available")
+        funding_gap = funding.get("funding_gap")
+        # A7: a withheld gap has no verdict, so it gets no positive/negative colour.
+        if not isinstance(funding_gap, (int, float)):
+            funding_gap_class = ""
+        else:
+            funding_gap_class = "negative" if funding_gap > 0 else "positive"
+# Doctrine A7: funding may be None (withheld). Feasibility is then
+# UNDETERMINED - never fabricated as a verdict.
+        if funding_gap is None:
+            is_feasible = None
+            feasibility_alert = "alert-info"
+            feasibility_label = "\u2139 Feasibility Undetermined"
+            feasibility_note = "Funding data is withheld (policy A7); feasibility cannot be assessed."
+        elif funding_gap <= 0:
+            is_feasible = True
+            feasibility_alert = "alert-success"
+            feasibility_label = "\u2705 Feasible"
+            feasibility_note = "This project appears financially viable."
+        else:
+            is_feasible = False
+            feasibility_alert = "alert-danger"
+            feasibility_label = "\u274c Not Feasible"
+            feasibility_note = f"Funding shortfall of ${funding_gap:,.2f}. Consider reducing scope or finding additional funding."
         
         # Get agent status
-        agent_status = orchestrator.get_agent_summary()
+        agent_status = orchestrator.get_agent_status()
         
         # Build agent status badges
         status_badges = ""
@@ -739,18 +778,18 @@ async def view_project(request: Request, project_name: str):
                 funding_html += f"""
                 <tr>
                     <td>{source.get('source', 'Unknown')}</td>
-                    <td class="text-right">${source.get('amount', 0):,.2f}</td>
+                    <td class="text-right">${money(source.get('amount'))}</td>
                 </tr>
                 """
         
         # Build cost breakdown table
         cost_breakdown_html = f"""
-        <tr><td>Planning</td><td class="text-right">${costs.get('planning_cost', 0):,.2f}</td><td class="text-right">{(costs.get('planning_cost', 0)/total_cost*100) if total_cost > 0 else 0:.1f}%</td></tr>
-        <tr><td>Infrastructure</td><td class="text-right">${costs.get('infrastructure_cost', 0):,.2f}</td><td class="text-right">{(costs.get('infrastructure_cost', 0)/total_cost*100) if total_cost > 0 else 0:.1f}%</td></tr>
-        <tr><td>Construction</td><td class="text-right">${costs.get('construction_cost', 0):,.2f}</td><td class="text-right">{(costs.get('construction_cost', 0)/total_cost*100) if total_cost > 0 else 0:.1f}%</td></tr>
-        <tr><td>Project Management</td><td class="text-right">${costs.get('management_cost', 0):,.2f}</td><td class="text-right">{(costs.get('management_cost', 0)/total_cost*100) if total_cost > 0 else 0:.1f}%</td></tr>
-        <tr><td>Contingency ({costs.get('contingency_percent', 0)}%)</td><td class="text-right">${costs.get('contingency', 0):,.2f}</td><td class="text-right">{(costs.get('contingency', 0)/total_cost*100) if total_cost > 0 else 0:.1f}%</td></tr>
-        <tr style="font-weight:700;background:#f8f9fa;"><td>TOTAL</td><td class="text-right">${total_cost:,.2f}</td><td class="text-right">100%</td></tr>
+        <tr><td>Planning</td><td class="text-right">{money(costs.get('planning_cost'))}</td><td class="text-right">{pct_share(costs.get('planning_cost'), total_cost)}%</td></tr>
+        <tr><td>Infrastructure</td><td class="text-right">{money(costs.get('infrastructure_cost'))}</td><td class="text-right">{pct_share(costs.get('infrastructure_cost'), total_cost)}%</td></tr>
+        <tr><td>Construction</td><td class="text-right">{money(costs.get('construction_cost'))}</td><td class="text-right">{pct_share(costs.get('construction_cost'), total_cost)}%</td></tr>
+        <tr><td>Project Management</td><td class="text-right">{money(costs.get('management_cost'))}</td><td class="text-right">{pct_share(costs.get('management_cost'), total_cost)}%</td></tr>
+        <tr><td>Contingency ({dash(costs.get('contingency_percent'))}%)</td><td class="text-right">{money(costs.get('contingency'))}</td><td class="text-right">{pct_share(costs.get('contingency'), total_cost)}%</td></tr>
+        <tr style="font-weight:700;background:#f8f9fa;"><td>TOTAL</td><td class="text-right">{money(total_cost)}</td><td class="text-right">100%</td></tr>
         """
         
         # Determine building count label
@@ -763,17 +802,17 @@ async def view_project(request: Request, project_name: str):
         
         # Get the appropriate cost per unit
         if is_commercial:
-            cost_per_unit = cost_metrics.get('cost_per_building', 0)
+            cost_per_unit = money(cost_metrics.get('cost_per_building'))
         else:
-            cost_per_unit = cost_metrics.get('cost_per_dwelling', 0)
+            cost_per_unit = money(cost_metrics.get('cost_per_dwelling'))
         
         # Unit metrics grid
         unit_metrics_html = f"""
         <div class="grid">
-            <div class="metric-card"><div class="label">{count_label}</div><div class="value">{cost_summary.get('total_buildings', 0)}</div></div>
-            <div class="metric-card"><div class="label">Cost per {building_label[:-1] if building_label.endswith('s') else building_label}</div><div class="value">${cost_per_unit:,.2f}</div></div>
-            <div class="metric-card"><div class="label">Total Building Area</div><div class="value">{cost_summary.get('total_area_sqm', 0):,.0f} sqm</div></div>
-            <div class="metric-card"><div class="label">Cost per sqm</div><div class="value">${cost_metrics.get('cost_per_sqm', 0):,.2f}</div></div>
+            <div class="metric-card"><div class="label">{count_label}</div><div class="value">{dash(cost_summary.get('total_buildings'))}</div></div>
+            <div class="metric-card"><div class="label">Cost per {building_label[:-1] if building_label.endswith('s') else building_label}</div><div class="value">{cost_per_unit}</div></div>
+            <div class="metric-card"><div class="label">Total Building Area</div><div class="value">{qty(cost_summary.get('total_area_sqm'))} sqm</div></div>
+            <div class="metric-card"><div class="label">Cost per sqm</div><div class="value">{money(cost_metrics.get('cost_per_sqm'))}</div></div>
         </div>
         """
         
@@ -860,9 +899,9 @@ async def view_project(request: Request, project_name: str):
             </div>
         </div>
         
-        <div class="alert {'alert-success' if is_feasible else 'alert-danger'}">
-            <strong>{'✅ Feasible' if is_feasible else '❌ Not Feasible'}</strong>
-            {'This project appears financially viable.' if is_feasible else f'Funding shortfall of ${funding_gap:,.2f}. Consider reducing scope or finding additional funding.'}
+        <div class="alert {feasibility_alert}">
+            <strong>{feasibility_label}</strong>
+            {feasibility_note}
         </div>
         
         <div class="alert alert-info">
@@ -876,10 +915,10 @@ async def view_project(request: Request, project_name: str):
                 <div class="metric-card"><div class="label">Project Type</div><div class="value" style="font-size:1.2rem;">{data['project']['type'].replace('_', ' ').title()}</div></div>
                 <div class="metric-card"><div class="label">Location</div><div class="value" style="font-size:1.2rem;">{data['project']['location'].title()}</div></div>
                 <div class="metric-card"><div class="label">Site Area</div><div class="value">{data['project']['site_area_ha']} ha</div></div>
-                <div class="metric-card"><div class="label">{count_label}</div><div class="value">{cost_summary.get('total_buildings', 0)}</div></div>
-                <div class="metric-card"><div class="label">Total Cost</div><div class="value">${total_cost:,.2f}</div></div>
-                <div class="metric-card"><div class="label">Total Funding</div><div class="value">${total_funding:,.2f}</div></div>
-                <div class="metric-card"><div class="label">Funding Gap</div><div class="value {'negative' if funding_gap > 0 else 'positive'}">${funding_gap:,.2f}</div></div>
+                <div class="metric-card"><div class="label">{count_label}</div><div class="value">{dash(cost_summary.get('total_buildings'))}</div></div>
+                <div class="metric-card"><div class="label">Total Cost</div><div class="value">{money(total_cost)}</div></div>
+                <div class="metric-card"><div class="label">Total Funding</div><div class="value">{money(total_funding)}</div></div>
+                <div class="metric-card"><div class="label">Funding Gap</div><div class="value {funding_gap_class}">{money(funding_gap)}</div></div>
                 <div class="metric-card"><div class="label">Building Description</div><div class="value" style="font-size:1rem;">{cost_summary.get('building_description', 'N/A')}</div></div>
             </div>
         </div>
@@ -887,19 +926,23 @@ async def view_project(request: Request, project_name: str):
         <!-- Cost Breakdown -->
         <div class="card">
             <h2>📊 Cost Breakdown</h2>
-            <table class="table">
-                <thead><tr><th>Phase</th><th class="text-right">Cost</th><th class="text-right">% of Total</th></tr></thead>
-                <tbody>{cost_breakdown_html}</tbody>
-            </table>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Phase</th><th class="text-right">Cost</th><th class="text-right">% of Total</th></tr></thead>
+                    <tbody>{cost_breakdown_html}</tbody>
+                </table>
+            </div>
         </div>
         
         <!-- Funding Sources -->
         <div class="card">
             <h2>💵 Funding Sources</h2>
-            <table class="table">
-                <thead><tr><th>Source</th><th class="text-right">Amount</th></tr></thead>
-                <tbody>{funding_html if funding_html else '<tr><td colspan="2" class="text-muted">No funding sources listed</td></tr>'}</tbody>
-            </table>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Source</th><th class="text-right">Amount</th></tr></thead>
+                    <tbody>{funding_html if funding_html else '<tr><td colspan="2" class="text-muted">No funding sources listed</td></tr>'}</tbody>
+                </table>
+            </div>
         </div>
         
         <!-- Unit Metrics -->
@@ -929,10 +972,12 @@ async def view_project(request: Request, project_name: str):
         <!-- Building Details -->
         <div class="card">
             <h2>🏗️ {building_label} Details</h2>
-            <table class="table">
-                <thead><tr><th>Type</th><th>Count</th><th>Bedrooms</th><th>Bathrooms</th><th class="text-right">Area (sqm)</th><th class="text-right">Total Area</th></tr></thead>
-                <tbody>{dwellings_html}</tbody>
-            </table>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Type</th><th>Count</th><th>Bedrooms</th><th>Bathrooms</th><th class="text-right">Area (sqm)</th><th class="text-right">Total Area</th></tr></thead>
+                    <tbody>{dwellings_html}</tbody>
+                </table>
+            </div>
         </div>
         """
         
@@ -944,7 +989,7 @@ async def view_project(request: Request, project_name: str):
                 <div class="metric-card">
                     <div class="label">Water</div>
                     <div class="value" style="font-size:1rem;">{data['infrastructure']['water'].get('existing', 'N/A').title()}</div>
-                    <div class="text-muted" style="font-size:0.85rem;">Crossovers: {data['infrastructure']['water'].get('crossovers', 0)} | Cost: ${data['infrastructure']['water'].get('cost_per', 0):,.2f}/ea</div>
+                    <div class="text-muted" style="font-size:0.85rem;">Crossovers: {data['infrastructure']['water'].get('crossovers', 0)} | Cost: {money(data['infrastructure']['water'].get('cost_per'))}/ea</div>
                 </div>
                 """
             if data["infrastructure"].get("power"):
@@ -952,7 +997,7 @@ async def view_project(request: Request, project_name: str):
                 <div class="metric-card">
                     <div class="label">Power</div>
                     <div class="value" style="font-size:1rem;">{data['infrastructure']['power'].get('existing', 'N/A').title()}</div>
-                    <div class="text-muted" style="font-size:0.85rem;">Connections: {data['infrastructure']['power'].get('connections', 0)} | Cost: ${data['infrastructure']['power'].get('cost_per', 0):,.2f}/ea</div>
+                    <div class="text-muted" style="font-size:0.85rem;">Connections: {data['infrastructure']['power'].get('connections', 0)} | Cost: {money(data['infrastructure']['power'].get('cost_per'))}/ea</div>
                 </div>
                 """
             if data["infrastructure"].get("sewer"):
@@ -960,7 +1005,7 @@ async def view_project(request: Request, project_name: str):
                 <div class="metric-card">
                     <div class="label">Sewer</div>
                     <div class="value" style="font-size:1rem;">{data['infrastructure']['sewer'].get('type', 'N/A').title()}</div>
-                    <div class="text-muted" style="font-size:0.85rem;">Units: {data['infrastructure']['sewer'].get('units', 0)} | Cost: ${data['infrastructure']['sewer'].get('cost_per', 0):,.2f}/ea</div>
+                    <div class="text-muted" style="font-size:0.85rem;">Units: {data['infrastructure']['sewer'].get('units', 0)} | Cost: {money(data['infrastructure']['sewer'].get('cost_per'))}/ea</div>
                 </div>
                 """
             if data["infrastructure"].get("roads"):
@@ -968,7 +1013,7 @@ async def view_project(request: Request, project_name: str):
                 <div class="metric-card">
                     <div class="label">Roads</div>
                     <div class="value" style="font-size:1rem;">{data['infrastructure']['roads'].get('existing', 'N/A').title()}</div>
-                    <div class="text-muted" style="font-size:0.85rem;">Upgrade Needed: {data['infrastructure']['roads'].get('upgrade_needed', False)} | Cost: ${data['infrastructure']['roads'].get('cost', 0):,.2f}</div>
+                    <div class="text-muted" style="font-size:0.85rem;">Upgrade Needed: {data['infrastructure']['roads'].get('upgrade_needed', False)} | Cost: {money(data['infrastructure']['roads'].get('cost'))}</div>
                 </div>
                 """
             if infra_html:
@@ -997,7 +1042,7 @@ async def view_project(request: Request, project_name: str):
                 <div class="grid">
                     <div class="metric-card"><div class="label">Tenure</div><div class="value" style="font-size:1rem;">{data['project'].get('land_tenure', 'N/A').title()}</div></div>
                     <div class="metric-card"><div class="label">Years Remaining</div><div class="value" style="font-size:1rem;">{lease.get('years_remaining', 'N/A')} years</div></div>
-                    <div class="metric-card"><div class="label">Annual Rent</div><div class="value" style="font-size:1rem;">${lease.get('annual_rent', 0):,.2f}</div></div>
+                    <div class="metric-card"><div class="label">Annual Rent</div><div class="value" style="font-size:1rem;">${money(lease.get('annual_rent'))}</div></div>
                 </div>
             </div>
             """
@@ -1173,7 +1218,7 @@ async def get_project_summary(project_name: str):
             "feasibility": {
                 "total_cost": cost_result.get("cost_breakdown", {}).get("total_cost", 0),
                 "funding_gap": cost_result.get("funding_analysis", {}).get("funding_gap", 0),
-                "is_feasible": cost_result.get("funding_analysis", {}).get("funding_gap", 0) <= 0
+                "is_feasible": (None if cost_result.get("funding_analysis", {}).get("funding_gap") is None else cost_result.get("funding_analysis", {}).get("funding_gap", 0) <= 0)
             },
             "planning": {
                 "pathway": planning_result.get("approval_requirements", {}).get("pathway", "Unknown"),

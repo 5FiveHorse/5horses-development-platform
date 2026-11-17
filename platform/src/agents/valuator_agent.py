@@ -2,7 +2,7 @@
 Valuator Agent - Provides property valuation estimates
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional, Tuple
 from .base_agent import BaseAgent
 
 
@@ -41,8 +41,31 @@ class ValuatorAgent(BaseAgent):
             "buildings"
         ]
     
-    def _get_land_value(self, location: str, site_area_ha: float) -> Dict[str, Any]:
-        """Get land value based on location"""
+    def _get_land_value(self, location: str, site_area_ha: float,
+                        land_tenure: str) -> Dict[str, Any]:
+        """
+        Land value estimate.
+
+        Market land value is only asserted for freehold land. A peppercorn /
+        leasehold site is not acquired at market rate, and its leasehold interest
+        cannot be valued from lease terms that are withheld (policy A7) - so the
+        land value stays None instead of inventing a market parcel value.
+        """
+        total_area_sqm = site_area_ha * 10000
+
+        if land_tenure != "freehold":
+            return {
+                "land_value": None,
+                "rate_per_sqm": None,
+                "total_area_sqm": total_area_sqm,
+                "confidence": "Undetermined",
+                "basis": (
+                    f"Land held on {land_tenure}: market land value not asserted "
+                    "(policy A7) - no freehold title, and the leasehold interest "
+                    "is not valued from withheld lease terms."
+                )
+            }
+
         # Base land rates by region (per sqm)
         land_rates = {
             "perth_metro": 1006,
@@ -56,7 +79,6 @@ class ValuatorAgent(BaseAgent):
         rate = land_rates.get(location.lower(), 350)  # Default to regional rate
         
         # Calculate total land value
-        total_area_sqm = site_area_ha * 10000
         land_value = rate * total_area_sqm
         
         # Adjust for location characteristics
@@ -69,28 +91,41 @@ class ValuatorAgent(BaseAgent):
             "land_value": land_value,
             "rate_per_sqm": rate,
             "total_area_sqm": total_area_sqm,
-            "confidence": confidence
+            "confidence": confidence,
+            "basis": f"Freehold land valued at ${rate}/sqm regional rate"
         }
     
-    def _get_construction_rate(self, location: str, project_type: str) -> float:
-        """Get construction rate per sqm based on location and type"""
-        base_rates = {
-            "perth_metro": 1100,
-            "perth": 1100,
-            "mount_barker": 1250,
-            "gnowangerup": 1200,
-            "great_southern": 1200
-        }
-        
-        rate = base_rates.get(location.lower(), 1200)
-        
-        # Adjust for project type
-        if project_type in ["community_housing", "social_housing"]:
-            rate *= 0.95  # Slightly lower cost for social housing
-        elif project_type == "commercial":
-            rate *= 1.15  # Higher cost for commercial
-        
-        return rate
+    def _construction_cost_basis(self, project_data: Dict[str, Any]) -> Tuple[Optional[float], Optional[str], List[str]]:
+        """
+        Resolve a construction cost basis that actually comes from the project.
+
+        Policy A7: a withheld construction cost is unknown, not a cue to insert a
+        regional default rate and derive a confident loss. Returns
+        (cost_or_None, source_note_or_None, redacted_paths).
+        """
+        phases = project_data.get("phases") or {}
+        phase_cost = (phases.get("construction") or {}).get("cost")
+        if phase_cost is not None:
+            return phase_cost, "phases.construction.cost", []
+
+        redacted = ["phases.construction.cost"]
+
+        # Real per-unit costs, used only when every building supplies one - a
+        # partial set would understate the total, so it is not asserted either.
+        buildings = project_data.get("buildings") or {}
+        items: List[Tuple[int, Optional[float]]] = []
+        for home in buildings.get("homes", []) or []:
+            items.append((home.get("count", 0), home.get("cost_per_unit")))
+        for dorm in buildings.get("dorms", []) or []:
+            items.append((dorm.get("count", 0), dorm.get("cost_per_unit")))
+        for commercial in buildings.get("commercial", []) or []:
+            items.append((1, commercial.get("cost_per_unit")))
+
+        if items and all(cost is not None for _, cost in items):
+            return sum(count * cost for count, cost in items), "buildings.*.cost_per_unit", redacted
+
+        redacted.append("buildings.*.cost_per_unit")
+        return None, None, redacted
     
     def _estimate_completed_value(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
         """Estimate completed project value"""
@@ -188,33 +223,74 @@ class ValuatorAgent(BaseAgent):
         location = project_data.get("project", {}).get("location", "unknown")
         site_area_ha = project_data.get("project", {}).get("site_area_ha", 0)
         project_type = project_data.get("project", {}).get("type", "traditional")
+        land_tenure = (project_data.get("project", {}).get("land_tenure") or "freehold").lower()
         
-        # Calculate land value
-        land = self._get_land_value(location, site_area_ha)
+        # Calculate land value (market value only asserted on freehold tenure)
+        land = self._get_land_value(location, site_area_ha, land_tenure)
         
         # Estimate completed value
         completed = self._estimate_completed_value(project_data)
-        
-        # Calculate gross profit
-        construction_rate = self._get_construction_rate(location, project_type)
-        construction_cost = completed["total_area_sqm"] * construction_rate if completed["total_area_sqm"] > 0 else 0
-        
-        gross_profit = completed["total_completed_value"] - land["land_value"] - construction_cost
-        
-        # Determine confidence level
-        if location.lower() in ["perth_metro", "perth"]:
-            confidence = "High"
-        elif location.lower() in ["mount_barker", "gnowangerup"]:
-            confidence = "Medium"
+
+        # Construction cost comes from project data only - no default rate is
+        # inserted to manufacture a cost where the project withheld one.
+        construction_cost, construction_source, construction_redacted = self._construction_cost_basis(project_data)
+        completed_area = completed["total_area_sqm"]
+        construction_rate = (
+            construction_cost / completed_area
+            if construction_cost is not None and completed_area > 0 else None
+        )
+
+        # Gross profit needs BOTH a land value and a construction cost basis;
+        # one withheld component leaves profitability Undetermined.
+        if land["land_value"] is not None and construction_cost is not None:
+            gross_profit = completed["total_completed_value"] - land["land_value"] - construction_cost
+            profit_margin = (gross_profit / completed["total_completed_value"] * 100) if completed["total_completed_value"] > 0 else 0
+            is_profitable = gross_profit > 0
+
+            # Determine confidence level
+            if location.lower() in ["perth_metro", "perth"]:
+                confidence = "High"
+            elif location.lower() in ["mount_barker", "gnowangerup"]:
+                confidence = "Medium"
+            else:
+                confidence = "Low"
         else:
-            confidence = "Low"
+            gross_profit = None
+            profit_margin = None
+            is_profitable = None
+            confidence = "Undetermined"
+
+        # Data quality / honesty block (A7 doctrine: nothing looks verified that isn't)
+        redacted_inputs = list(construction_redacted)
+        lease_terms = project_data.get("project", {}).get("lease_terms") or {}
+        if land["land_value"] is None and any(v is None for v in lease_terms.values()):
+            redacted_inputs.append("project.lease_terms")
+
+        if redacted_inputs:
+            data_quality = {
+                "redacted_inputs": redacted_inputs,
+                "confidence": "partial",
+                "note": (
+                    "Construction cost and/or lease particulars are redacted "
+                    "(confidentiality policy A7). No regional default rate is "
+                    "inserted and no gross profit is asserted where the cost "
+                    "basis is withheld."
+                )
+            }
+        else:
+            data_quality = {
+                "redacted_inputs": [],
+                "confidence": "full",
+                "note": "All required inputs present."
+            }
         
         results = {
             "land_valuation": {
                 "land_value": land["land_value"],
                 "rate_per_sqm": land["rate_per_sqm"],
                 "total_area_sqm": land["total_area_sqm"],
-                "confidence": land["confidence"]
+                "confidence": land["confidence"],
+                "basis": land["basis"]
             },
             "completed_valuation": {
                 "total_completed_value": completed["total_completed_value"],
@@ -224,26 +300,40 @@ class ValuatorAgent(BaseAgent):
             },
             "construction_analysis": {
                 "construction_rate_per_sqm": construction_rate,
-                "estimated_construction_cost": construction_cost
+                "estimated_construction_cost": construction_cost,
+                "source": construction_source or (
+                    "withheld (policy A7) - no project construction cost data; "
+                    "no regional rate inserted"
+                )
             },
             "profitability": {
                 "gross_profit": gross_profit,
-                "profit_margin_percent": (gross_profit / completed["total_completed_value"] * 100) if completed["total_completed_value"] > 0 else 0,
-                "is_profitable": gross_profit > 0,
+                "profit_margin_percent": profit_margin,
+                "is_profitable": is_profitable,
                 "confidence_level": confidence
             },
             "valuation_confidence": {
                 "overall_confidence": confidence,
                 "factors": [
                     f"Location data: {confidence}",
-                    f"Valuation methodology: Standard",
-                    f"Market data: {confidence}",
-                    f"Property type: {confidence}"
+                    "Valuation methodology: standard (building areas x regional value benchmarks)",
+                    "Market data: benchmark table, not verified sales evidence",
+                    f"Property type: {project_type}",
+                    (
+                        "Construction cost: withheld (policy A7) - no default rate inserted"
+                        if construction_cost is None else "Construction cost: from project data"
+                    )
                 ]
-            }
+            },
+            "data_quality": data_quality
         }
         
         self.logger.info(f"Valuation complete. Total value: ${completed['total_completed_value']:,.2f}")
-        self.logger.info(f"Gross profit: ${gross_profit:,.2f}")
+        if gross_profit is not None:
+            self.logger.info(f"Gross profit: ${gross_profit:,.2f}")
+        else:
+            self.logger.info(
+                "Gross profit: Undetermined (policy A7) - land and/or construction cost basis withheld"
+            )
         
         return self.format_output(results)

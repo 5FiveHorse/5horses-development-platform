@@ -10,6 +10,12 @@ naming the redacted inputs, and derived figures are labelled as floors, not
 verified budgets. Null-tolerant funding summation (redacted amounts count 0,
 never fabricated). Replaces the corrupted intermediate copy from the same
 session. Baseline: Ox Alpha delivery record (Stage 3).
+
+v1.2 (2026-11-17): redacted is no longer counted as zero. Phase costs and
+funding amounts that are null stay None, so a wholly withheld project reports
+total_cost/total_funding/funding_gap None, per-unit metrics None, and
+funding_adequacy "undetermined" - the dashboard then shows em-dashes and an
+Undetermined banner instead of a fabricated $0.00 "Feasible" verdict.
 """
 
 import re
@@ -204,51 +210,78 @@ class CostAgent(BaseAgent):
 
         redacted = getattr(self, "_redacted_inputs", [])
 
-        # Get phase costs (redacted/null counts as 0 - never a fabricated figure)
-        planning_cost = self.get_project_data("phases.planning.cost") or 0
-        infrastructure_cost = self.get_project_data("phases.infrastructure.cost") or 0
-        construction_cost = self.get_project_data("phases.construction.cost") or 0
-        management_cost = self.get_project_data("phases.project_management.cost") or 0
+        # Get phase costs. Policy A7: a null is WITHHELD, not zero - keep it
+        # None so the renderer shows an em-dash rather than a fabricated $0.00.
+        planning_cost = self.get_project_data("phases.planning.cost")
+        infrastructure_cost = self.get_project_data("phases.infrastructure.cost")
+        construction_cost = self.get_project_data("phases.construction.cost")
+        management_cost = self.get_project_data("phases.project_management.cost")
         contingency_percent = self.get_project_data("phases.contingency_percent") or 10
 
-        # Calculate total direct costs
-        direct_costs = planning_cost + infrastructure_cost + construction_cost + management_cost
+        # Sum only the phases actually known. If every phase is withheld the
+        # total is unknown (None) - no verdict may be derived from nothing.
+        known_costs = [v for v in (planning_cost, infrastructure_cost,
+                                   construction_cost, management_cost)
+                       if v is not None]
+        if known_costs:
+            direct_costs = sum(known_costs)
+            contingency = direct_costs * (contingency_percent / 100)
+            total_cost = direct_costs + contingency
+        else:
+            direct_costs = None
+            contingency = None
+            total_cost = None
 
-        # Calculate contingency
-        contingency = direct_costs * (contingency_percent / 100)
-
-        # Total project cost
-        total_cost = direct_costs + contingency
-
-        # Get funding information (redacted amounts contribute 0)
+        # Same doctrine for funding: a withheld amount is not a contribution.
         funding_sources = self.get_project_data("funding.sources") or []
-        total_funding = sum((s.get("amount") or 0) for s in funding_sources)
-        funding_gap = total_cost - total_funding
+        known_amounts = [s.get("amount") for s in funding_sources
+                         if s.get("amount") is not None]
+        total_funding = sum(known_amounts) if known_amounts else None
+        funding_gap = (total_cost - total_funding
+                       if total_cost is not None and total_funding is not None
+                       else None)
 
         # Get building data
         building_data = self.get_project_data("buildings") or {}
         total_buildings, total_area = self._count_buildings(building_data)
         building_description = self._get_building_description(building_data)
 
-        # Cost per building
-        cost_per_building = total_cost / total_buildings if total_buildings > 0 else 0
+        # Cost per building (None when the cost basis is withheld)
+        cost_per_building = (
+            total_cost / total_buildings
+            if total_cost is not None and total_buildings > 0 else None
+        )
 
-        # Cost per sqm
-        cost_per_sqm = total_cost / total_area if total_area > 0 else 0
+        # Cost per sqm (None when the cost basis is withheld)
+        cost_per_sqm = (
+            total_cost / total_area
+            if total_cost is not None and total_area > 0 else None
+        )
 
         # Determine project type for feasibility analysis
         project_type = self.get_project_data("project.type") or "unknown"
 
         # Feasibility: funding adequacy (identical check across project types;
         # redacted data means the gap is a floor, flagged below)
-        is_feasible = funding_gap <= 0
-        feasibility_reason = "Funding sufficient" if is_feasible else f"Funding shortfall of ${funding_gap:,.2f}"
-
-        if redacted:
-            feasibility_reason += (
-                " (NOTE: some inputs redacted under policy A7 - figures are "
-                "floors, not verified budgets)"
+        # A withheld funding gap is UNDETERMINED - never a fabricated verdict.
+        if funding_gap is None:
+            is_feasible = None
+            funding_adequacy = "undetermined"
+            feasibility_reason = (
+                "Funding data withheld (policy A7) - feasibility cannot be assessed."
             )
+        else:
+            is_feasible = funding_gap <= 0
+            funding_adequacy = "adequate" if is_feasible else "shortfall"
+            feasibility_reason = (
+                "Funding sufficient" if is_feasible
+                else f"Funding shortfall of ${funding_gap:,.2f}"
+            )
+            if redacted:
+                feasibility_reason += (
+                    " (NOTE: some inputs redacted under policy A7 - figures are "
+                    "floors, not verified budgets)"
+                )
 
         # Data quality / honesty block (A7 doctrine: nothing looks verified that isn't)
         if redacted:
@@ -288,7 +321,7 @@ class CostAgent(BaseAgent):
             "funding_analysis": {
                 "total_funding_available": total_funding,
                 "funding_gap": funding_gap,
-                "funding_adequacy": "adequate" if funding_gap <= 0 else "shortfall",
+                "funding_adequacy": funding_adequacy,
                 "funding_sources": len(funding_sources)
             },
             "unit_metrics": {
@@ -304,7 +337,8 @@ class CostAgent(BaseAgent):
             "data_quality": data_quality
         }
 
-        self.logger.info(f"Cost analysis complete. Total cost: ${total_cost:,.2f}")
+        cost_text = f"${total_cost:,.2f}" if total_cost is not None else "withheld (A7)"
+        self.logger.info(f"Cost analysis complete. Total cost: {cost_text}")
         self.logger.info(f"Buildings: {building_description}")
         if redacted:
             self.logger.warning(
