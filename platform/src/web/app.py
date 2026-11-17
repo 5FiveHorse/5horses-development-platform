@@ -186,6 +186,8 @@ def get_base_html(title, content, scripts=""):
         .table th, .table td {{ padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6; }}
         .table th {{ background: #f8f9fa; font-weight: 600; }}
         .table tr:hover {{ background: #f8f9fa; }}
+        /* Wide tables scroll inside their card instead of widening the page */
+        .table-wrap {{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
         .project-list-item {{
             padding: 1rem;
             border: 1px solid #dee2e6;
@@ -688,6 +690,11 @@ async def view_project(request: Request, project_name: str):
         total_cost = costs.get("total_cost")
         total_funding = funding.get("total_funding_available")
         funding_gap = funding.get("funding_gap")
+        # A7: a withheld gap has no verdict, so it gets no positive/negative colour.
+        if not isinstance(funding_gap, (int, float)):
+            funding_gap_class = ""
+        else:
+            funding_gap_class = "negative" if funding_gap > 0 else "positive"
 # Doctrine A7: funding may be None (withheld). Feasibility is then
 # UNDETERMINED - never fabricated as a verdict.
         if funding_gap is None:
@@ -911,7 +918,7 @@ async def view_project(request: Request, project_name: str):
                 <div class="metric-card"><div class="label">{count_label}</div><div class="value">{dash(cost_summary.get('total_buildings'))}</div></div>
                 <div class="metric-card"><div class="label">Total Cost</div><div class="value">{money(total_cost)}</div></div>
                 <div class="metric-card"><div class="label">Total Funding</div><div class="value">{money(total_funding)}</div></div>
-                <div class="metric-card"><div class="label">Funding Gap</div><div class="value {'negative' if isinstance(funding_gap, (int, float)) and funding_gap > 0 else 'positive'}">{money(funding_gap)}</div></div>
+                <div class="metric-card"><div class="label">Funding Gap</div><div class="value {funding_gap_class}">{money(funding_gap)}</div></div>
                 <div class="metric-card"><div class="label">Building Description</div><div class="value" style="font-size:1rem;">{cost_summary.get('building_description', 'N/A')}</div></div>
             </div>
         </div>
@@ -919,19 +926,23 @@ async def view_project(request: Request, project_name: str):
         <!-- Cost Breakdown -->
         <div class="card">
             <h2>📊 Cost Breakdown</h2>
-            <table class="table">
-                <thead><tr><th>Phase</th><th class="text-right">Cost</th><th class="text-right">% of Total</th></tr></thead>
-                <tbody>{cost_breakdown_html}</tbody>
-            </table>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Phase</th><th class="text-right">Cost</th><th class="text-right">% of Total</th></tr></thead>
+                    <tbody>{cost_breakdown_html}</tbody>
+                </table>
+            </div>
         </div>
         
         <!-- Funding Sources -->
         <div class="card">
             <h2>💵 Funding Sources</h2>
-            <table class="table">
-                <thead><tr><th>Source</th><th class="text-right">Amount</th></tr></thead>
-                <tbody>{funding_html if funding_html else '<tr><td colspan="2" class="text-muted">No funding sources listed</td></tr>'}</tbody>
-            </table>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Source</th><th class="text-right">Amount</th></tr></thead>
+                    <tbody>{funding_html if funding_html else '<tr><td colspan="2" class="text-muted">No funding sources listed</td></tr>'}</tbody>
+                </table>
+            </div>
         </div>
         
         <!-- Unit Metrics -->
@@ -961,10 +972,12 @@ async def view_project(request: Request, project_name: str):
         <!-- Building Details -->
         <div class="card">
             <h2>🏗️ {building_label} Details</h2>
-            <table class="table">
-                <thead><tr><th>Type</th><th>Count</th><th>Bedrooms</th><th>Bathrooms</th><th class="text-right">Area (sqm)</th><th class="text-right">Total Area</th></tr></thead>
-                <tbody>{dwellings_html}</tbody>
-            </table>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Type</th><th>Count</th><th>Bedrooms</th><th>Bathrooms</th><th class="text-right">Area (sqm)</th><th class="text-right">Total Area</th></tr></thead>
+                    <tbody>{dwellings_html}</tbody>
+                </table>
+            </div>
         </div>
         """
         
