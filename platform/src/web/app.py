@@ -685,10 +685,26 @@ async def view_project(request: Request, project_name: str):
         urban = urban_result.get("results", {}).get("yield_analysis", {})
         density = urban_result.get("results", {}).get("density_analysis", {})
         
-        total_cost = costs.get("total_cost", 0)
-        total_funding = funding.get("total_funding_available", 0)
-        funding_gap = funding.get("funding_gap", 0)
-        is_feasible = funding_gap <= 0
+        total_cost = costs.get("total_cost")
+        total_funding = funding.get("total_funding_available")
+        funding_gap = funding.get("funding_gap")
+# Doctrine A7: funding may be None (withheld). Feasibility is then
+# UNDETERMINED - never fabricated as a verdict.
+        if funding_gap is None:
+            is_feasible = None
+            feasibility_alert = "alert-info"
+            feasibility_label = "\u2139 Feasibility Undetermined"
+            feasibility_note = "Funding data is withheld (policy A7); feasibility cannot be assessed."
+        elif funding_gap <= 0:
+            is_feasible = True
+            feasibility_alert = "alert-success"
+            feasibility_label = "\u2705 Feasible"
+            feasibility_note = "This project appears financially viable."
+        else:
+            is_feasible = False
+            feasibility_alert = "alert-danger"
+            feasibility_label = "\u274c Not Feasible"
+            feasibility_note = f"Funding shortfall of {{money(funding_gap)}}. Consider reducing scope or finding additional funding."
         
         # Get agent status
         agent_status = orchestrator.get_agent_status()
@@ -766,7 +782,7 @@ async def view_project(request: Request, project_name: str):
         <tr><td>Construction</td><td class="text-right">{money(costs.get('construction_cost'))}</td><td class="text-right">{pct_share(costs.get('construction_cost'), total_cost)}%</td></tr>
         <tr><td>Project Management</td><td class="text-right">{money(costs.get('management_cost'))}</td><td class="text-right">{pct_share(costs.get('management_cost'), total_cost)}%</td></tr>
         <tr><td>Contingency ({dash(costs.get('contingency_percent'))}%)</td><td class="text-right">{money(costs.get('contingency'))}</td><td class="text-right">{pct_share(costs.get('contingency'), total_cost)}%</td></tr>
-        <tr style="font-weight:700;background:#f8f9fa;"><td>TOTAL</td><td class="text-right">${total_cost:,.2f}</td><td class="text-right">100%</td></tr>
+        <tr style="font-weight:700;background:#f8f9fa;"><td>TOTAL</td><td class="text-right">{money(total_cost)}</td><td class="text-right">100%</td></tr>
         """
         
         # Determine building count label
@@ -876,9 +892,9 @@ async def view_project(request: Request, project_name: str):
             </div>
         </div>
         
-        <div class="alert {'alert-success' if is_feasible else 'alert-danger'}">
-            <strong>{'✅ Feasible' if is_feasible else '❌ Not Feasible'}</strong>
-            {'This project appears financially viable.' if is_feasible else f'Funding shortfall of ${funding_gap:,.2f}. Consider reducing scope or finding additional funding.'}
+        <div class="alert {feasibility_alert}">
+            <strong>{feasibility_label}</strong>
+            {feasibility_note}
         </div>
         
         <div class="alert alert-info">
@@ -893,9 +909,9 @@ async def view_project(request: Request, project_name: str):
                 <div class="metric-card"><div class="label">Location</div><div class="value" style="font-size:1.2rem;">{data['project']['location'].title()}</div></div>
                 <div class="metric-card"><div class="label">Site Area</div><div class="value">{data['project']['site_area_ha']} ha</div></div>
                 <div class="metric-card"><div class="label">{count_label}</div><div class="value">{dash(cost_summary.get('total_buildings'))}</div></div>
-                <div class="metric-card"><div class="label">Total Cost</div><div class="value">${total_cost:,.2f}</div></div>
-                <div class="metric-card"><div class="label">Total Funding</div><div class="value">${total_funding:,.2f}</div></div>
-                <div class="metric-card"><div class="label">Funding Gap</div><div class="value {'negative' if funding_gap > 0 else 'positive'}">${funding_gap:,.2f}</div></div>
+                <div class="metric-card"><div class="label">Total Cost</div><div class="value">{money(total_cost)}</div></div>
+                <div class="metric-card"><div class="label">Total Funding</div><div class="value">{money(total_funding)}</div></div>
+                <div class="metric-card"><div class="label">Funding Gap</div><div class="value {'negative' if isinstance(funding_gap, (int, float)) and funding_gap > 0 else 'positive'}">{money(funding_gap)}</div></div>
                 <div class="metric-card"><div class="label">Building Description</div><div class="value" style="font-size:1rem;">{cost_summary.get('building_description', 'N/A')}</div></div>
             </div>
         </div>
@@ -1189,7 +1205,7 @@ async def get_project_summary(project_name: str):
             "feasibility": {
                 "total_cost": cost_result.get("cost_breakdown", {}).get("total_cost", 0),
                 "funding_gap": cost_result.get("funding_analysis", {}).get("funding_gap", 0),
-                "is_feasible": cost_result.get("funding_analysis", {}).get("funding_gap", 0) <= 0
+                "is_feasible": (None if cost_result.get("funding_analysis", {}).get("funding_gap") is None else cost_result.get("funding_analysis", {}).get("funding_gap", 0) <= 0)
             },
             "planning": {
                 "pathway": planning_result.get("approval_requirements", {}).get("pathway", "Unknown"),
